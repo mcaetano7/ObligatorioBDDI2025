@@ -63,8 +63,5 @@ class Mantenimientos extends Maquinas, Tecnicos{
 
 
 
-<<<<<<< HEAD
+
 @enduml
-=======
-@enduml
->>>>>>> rama-martina
