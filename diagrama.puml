@@ -1,7 +1,5 @@
 @startuml obligatorio2025
 
-More actions
-
 class Login{
     - correo: unique primary key
     - contrase;a
@@ -65,4 +63,8 @@ class Mantenimientos extends Maquinas, Tecnicos{
 
 
 
+<<<<<<< HEAD
 @enduml
+=======
+@enduml
+>>>>>>> rama-martina
