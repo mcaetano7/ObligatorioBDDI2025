@@ -1,6 +1,7 @@
 # ObligatorioBDDI2025
 
 ===========================================
+
 crear el entorno virtual (venv):
 python -m venv venv
 
@@ -24,6 +25,7 @@ python app.py (con el entorno venv activado)
 
 
 ===========================================
+
 ejecutar frontend: (en una terminal aparte)
 
 1) in a la carpeta frontend
