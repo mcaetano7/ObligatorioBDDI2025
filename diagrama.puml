@@ -1,0 +1,68 @@
+@startuml obligatorio2025
+
+More actions
+
+class Login{
+    - correo: unique primary key
+    - contrase;a
+    - esAdmin
+}
+
+class Proveedores{
+
+    - id: int auto_increment PK
+    - nombre
+    - contacto
+}
+
+class Insumos extends Proveedores{
+    - id: int auto_increment PRIMARY KEY
+    - descripcion
+    - tipo
+    - precioUnitario
+    - idProveedor: FK
+}
+
+class Clientes{
+    - id: int auto_increment PRIMARY KEY
+    - nombre
+    - direccion
+    - telefono
+    - correo 
+}
+
+class Maquinas extends Clientes{
+    - id: int auto_increment PRIMARY KEY
+    - modelo
+    - idCliente: FK
+    - ubicacionCliente: FK
+    - costoAlquilerMensual
+}
+
+class RegistroConsumo extends Maquinas, Insumos{
+    - id: int auto_increment
+    - idMaquina: FK
+    - idInsumo: FK
+    - fecha: DATETIME
+    - cantidadUsada
+}
+
+class Tecnicos{
+    - ci: unique PRIMARY KEY
+    - nombre
+    - apellido
+    - telefono
+}
+
+class Mantenimientos extends Maquinas, Tecnicos{
+    - id: int auto_increment PRIMARY KEY
+    - idMaquina: FK
+    - ciTecnico: FK
+    - tipo
+    - fecha: DATETIME
+}
+
+
+
+
+@enduml
