@@ -37,7 +37,7 @@ cd frontend
 
 npm install
 
-seleccionar React y JavaScript
+seleccionar React y JavaScript ?? como se hace esto
 
 2) ejecutar el proyecto
 
