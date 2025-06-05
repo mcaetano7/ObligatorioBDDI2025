@@ -12,12 +12,13 @@ cd backend
 
 2) activar el entorno virtual (venv): 
 
-Git bas: source venv/Scripts/activate
+Git bash: source venv/Scripts/activate
 PowerShell: .\venv\Scripts\Activate.ps1
+CMD: ..\venv\Scripts\activate
 
 3) instalar dependencias del proyecto:
 
-pip install -r requirements.txt  (con el entorno venv activado)
+pip install -r requirements.txt  (con el entorno venv activado) en backend o carpeta principal?
 
 ejecutar flask:
 
