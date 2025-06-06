@@ -60,8 +60,4 @@ class Mantenimientos extends Maquinas, Tecnicos{
     - fecha: DATETIME
 }
 
-
-
-
-
 @enduml
