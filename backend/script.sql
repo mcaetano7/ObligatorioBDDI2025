@@ -67,3 +67,7 @@ CREATE TABLE Mantenimientos (
     FOREIGN KEY (ciTecnico) REFERENCES Tecnicos(ci)
 );
 
+
+CREATE USER 'admin_marloy'@'localhost' IDENTIFIED BY 'super_password';
+
+
