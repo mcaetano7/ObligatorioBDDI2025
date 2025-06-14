@@ -1,63 +1,108 @@
 @startuml obligatorio2025
 
-class Login{
-    - correo: unique primary key
-    - contrase;a
-    - esAdmin
+class Roles {
+    + id_rol : int <<PK>>
+    + nombre_rol : varchar(50) <<unique>>
 }
 
-class Proveedores{
-
-    - id: int auto_increment PK
-    - nombre
-    - contacto
+class Usuarios {
+    + id_usuario : int <<PK>>
+    + nombre_usuario : varchar(100)
+    + email : varchar(100) <<unique>>
+    + password_hash : varchar(255)
+    + id_rol : int <<FK>>
+    + fecha_registro : datetime <<default: current_timestamp>>
 }
 
-class Insumos extends Proveedores{
-    - id: int auto_increment PRIMARY KEY
-    - descripcion
-    - tipo
-    - precioUnitario
-    - idProveedor: FK
+class Clientes {
+    + id_cliente : int <<PK>>
+    + rut : int <<unique, FK a Usuarios>>
+    + nombre_empresa : varchar(150)
+    + direccion : varchar(255)
+    + telefono : varchar(50)
 }
 
-class Clientes{
-    - id: int auto_increment PRIMARY KEY
-    - nombre
-    - direccion
-    - telefono
-    - correo 
+class Maquinas {
+    + id_maquina : int <<PK>>
+    + modelo : varchar(100)
+    + marca : varchar(100)
+    + capacidad_cafe : decimal(10,2)
+    + capacidad_agua : decimal(10,2)
+    + costo_mensual_alquiler : decimal(10,2)
+    + porcentaje_ganancia_empresa : decimal(5)
 }
 
-class Maquinas extends Clientes{
-    - id: int auto_increment PRIMARY KEY
-    - modelo
-    - idCliente: FK
-    - ubicacionCliente: FK
-    - costoAlquilerMensual
+class Alquileres {
+    + id_alquiler : int <<PK>>
+    + id_maquina : int <<FK>>
+    + id_cliente : int <<FK>>
+    + fecha_inicio : date
+    + fecha_fin : date
+    + ganancias_maquina_total : decimal(12,2) <<default: 0>>
+    + coste_total_alquiler : decimal(12,2) <<default: 0>>
 }
 
-class RegistroConsumo extends Maquinas, Insumos{
-    - id: int auto_increment
-    - idMaquina: FK
-    - idInsumo: FK
-    - fecha: DATETIME
-    - cantidadUsada
+class GananciasMaquina {
+    + id_ganancia : int <<PK>>
+    + id_alquiler : int <<FK>>
+    + mes : int
+    + año : int
+    + ganancia_cliente : decimal(10,2)
+    + ganancia_empresa : decimal(10,2)
+    + total_ventas : decimal(12)
 }
 
-class Tecnicos{
-    - ci: unique PRIMARY KEY
-    - nombre
-    - apellido
-    - telefono
+class Proveedores {
+    + id_proveedor : int <<PK>>
+    + nombre_proveedor : varchar(150)
+    + telefono : varchar(50)
+    + email : varchar(100)
+    + direccion : varchar(255)
 }
 
-class Mantenimientos extends Maquinas, Tecnicos{
-    - id: int auto_increment PRIMARY KEY
-    - idMaquina: FK
-    - ciTecnico: FK
-    - tipo
-    - fecha: DATETIME
+class Insumos {
+    + id_insumo : int <<PK>>
+    + nombre_insumo : varchar(100)
+    + unidad_medida : varchar(50)
+    + costo_unitario : decimal(10,2)
+    + id_proveedor : int <<FK>>
 }
+
+class ConsumoInsumos {
+    + id_consumo : int <<PK>>
+    + id_alquiler : int <<FK>>
+    + id_insumo : int <<FK>>
+    + cantidad_consumida : decimal(10,2)
+    + fecha_consumo : date
+}
+
+class Tecnicos {
+    + id_tecnico : int <<PK>>
+    + nombre_tecnico : varchar(100)
+    + telefono : varchar(50)
+    + email : varchar(100)
+}
+
+class SolicitudesMantenimiento {
+    + id_solicitud : int <<PK>>
+    + id_alquiler : int <<FK>>
+    + fecha_solicitud : date
+    + descripcion : text
+    + id_tecnico_asignado : int <<FK>>
+    + fecha_asignacion : date
+    + fecha_resolucion : date
+}
+
+' Relaciones
+Usuarios --> Roles : id_rol
+Clientes --> Usuarios : rut
+Alquileres --> Maquinas : id_maquina
+Alquileres --> Clientes : id_cliente
+GananciasMaquina --> Alquileres : id_alquiler
+Insumos --> Proveedores : id_proveedor
+ConsumoInsumos --> Alquileres : id_alquiler
+ConsumoInsumos --> Insumos : id_insumo
+SolicitudesMantenimiento --> Alquileres : id_alquiler
+SolicitudesMantenimiento --> Tecnicos : id_tecnico_asignado
 
 @enduml
