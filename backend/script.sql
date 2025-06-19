@@ -1,4 +1,4 @@
-CREATE DATABASE CafesMarloy;
+CREATE DATABASE IF NOT EXISTS CafesMarloy;
 USE CafesMarloy;
 
 CREATE TABLE Login (
