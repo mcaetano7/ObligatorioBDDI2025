@@ -7,3 +7,4 @@ def get_connection():
         password='JuliOliv2024',
         database='cafes_marloy'
     )
+
