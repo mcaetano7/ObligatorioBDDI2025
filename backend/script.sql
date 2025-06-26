@@ -76,7 +76,7 @@ CREATE TABLE GananciasMaquina (
     id_ganancia INT AUTO_INCREMENT PRIMARY KEY,
     id_alquiler INT,
     mes INT,
-    año INT,
+    anio INT,
     ganancia_cliente DECIMAL(10,2),
     ganancia_empresa DECIMAL(10,2),
     total_ventas DECIMAL(12),
