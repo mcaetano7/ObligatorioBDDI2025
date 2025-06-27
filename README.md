@@ -18,7 +18,7 @@ CMD: ..\venv\Scripts\activate
 
 3) instalar dependencias del proyecto:
 
-pip install -r requirements.txt  (con el entorno venv activado) en backend o carpeta principal?
+pip install -r requirements.txt  (con el entorno venv activado) en backend
 
 ejecutar flask:
 

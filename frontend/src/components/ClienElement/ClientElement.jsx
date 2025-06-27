@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-function Clientes() {
+function ClientElement() {
   const [clientes, setClientes] = useState([]);
 
   useEffect(() => {
@@ -24,4 +24,4 @@ function Clientes() {
   );
 }
 
-export default Clientes;
+export default ClientElement;
