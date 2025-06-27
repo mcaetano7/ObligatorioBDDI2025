@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 const Maquinas = () => {
   const [maquinas, setMaquinas] = useState([]);
   const [error, setError] = useState('');
+  const [form, setForm] = useState({ modelo: '', marca: '', capacidad_cafe: '', capacidad_agua: '', costo_mensual_alquiler: '', porcentaje_ganancia_empresa: '' });
+  const [editId, setEditId] = useState(null);
 
   useEffect(() => {
     const fetchMaquinas = async () => {
@@ -22,6 +24,40 @@ const Maquinas = () => {
     fetchMaquinas();
   }, []);
 
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    alert('Alta de máquina no implementada aún.');
+    // Aquí irá el fetch POST cuando el backend esté listo
+  };
+
+  const handleEdit = (maquina) => {
+    setEditId(maquina.id_maquina);
+    setForm({
+      modelo: maquina.modelo,
+      marca: maquina.marca,
+      capacidad_cafe: maquina.capacidad_cafe,
+      capacidad_agua: maquina.capacidad_agua,
+      costo_mensual_alquiler: maquina.costo_mensual_alquiler,
+      porcentaje_ganancia_empresa: maquina.porcentaje_ganancia_empresa,
+    });
+  };
+
+  const handleUpdate = (e) => {
+    e.preventDefault();
+    alert('Edición de máquina no implementada aún.');
+    setEditId(null);
+    // Aquí irá el fetch PUT cuando el backend esté listo
+  };
+
+  const handleDelete = (id) => {
+    alert('Eliminación de máquina no implementada aún.');
+    // Aquí irá el fetch DELETE cuando el backend esté listo
+  };
+
   return (
     <div>
       <h2>Máquinas</h2>
@@ -31,10 +67,39 @@ const Maquinas = () => {
           <li>No hay máquinas para mostrar.</li>
         ) : (
           maquinas.map((maquina) => (
-            <li key={maquina.id}>{maquina.nombre}</li>
+            <li key={maquina.id_maquina}>
+              {editId === maquina.id_maquina ? (
+                <form onSubmit={handleUpdate} style={{display:'inline'}}>
+                  <input name="modelo" value={form.modelo} onChange={handleChange} required />
+                  <input name="marca" value={form.marca} onChange={handleChange} required />
+                  <input name="capacidad_cafe" value={form.capacidad_cafe} onChange={handleChange} required />
+                  <input name="capacidad_agua" value={form.capacidad_agua} onChange={handleChange} required />
+                  <input name="costo_mensual_alquiler" value={form.costo_mensual_alquiler} onChange={handleChange} required />
+                  <input name="porcentaje_ganancia_empresa" value={form.porcentaje_ganancia_empresa} onChange={handleChange} required />
+                  <button type="submit">Guardar</button>
+                  <button type="button" onClick={()=>setEditId(null)}>Cancelar</button>
+                </form>
+              ) : (
+                <>
+                  <b>{maquina.modelo}</b> | {maquina.marca} | Café: {maquina.capacidad_cafe} | Agua: {maquina.capacidad_agua} | Alquiler: ${maquina.costo_mensual_alquiler} | % Empresa: {maquina.porcentaje_ganancia_empresa}
+                  <button onClick={()=>handleEdit(maquina)}>Editar</button>
+                  <button onClick={()=>handleDelete(maquina.id_maquina)}>Eliminar</button>
+                </>
+              )}
+            </li>
           ))
         )}
       </ul>
+      <h3>Agregar Máquina</h3>
+      <form onSubmit={handleSubmit}>
+        <input name="modelo" placeholder="Modelo" value={form.modelo} onChange={handleChange} required />
+        <input name="marca" placeholder="Marca" value={form.marca} onChange={handleChange} required />
+        <input name="capacidad_cafe" placeholder="Capacidad café" value={form.capacidad_cafe} onChange={handleChange} required />
+        <input name="capacidad_agua" placeholder="Capacidad agua" value={form.capacidad_agua} onChange={handleChange} required />
+        <input name="costo_mensual_alquiler" placeholder="Costo alquiler" value={form.costo_mensual_alquiler} onChange={handleChange} required />
+        <input name="porcentaje_ganancia_empresa" placeholder="% ganancia empresa" value={form.porcentaje_ganancia_empresa} onChange={handleChange} required />
+        <button type="submit">Agregar</button>
+      </form>
     </div>
   );
 };
