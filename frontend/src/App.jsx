@@ -1,13 +1,14 @@
+// eslint-disable-next-line no-unused-vars
 import React, { useEffect, useState } from 'react';
-//import Clientes from './components/Clientes/Clientes';
-//import Maquinas from './components/Maquinas/Maquinas';
+import LoginRegisterForm from './pages/LoginPage/LogInPage'
+
 
 
 function App() {
   return (
     <div style={{ padding: '2rem' }}>
       <h1>Panel Cafés Marloy</h1>
-
+      <LoginRegisterForm/>
 
     </div>
   );

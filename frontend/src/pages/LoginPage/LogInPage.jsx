@@ -7,10 +7,12 @@ export default function LoginRegisterForm() {
     correo: "",
     password: "",
   });
+  const [message, setMessage] = useState("");
 
   const toggleMode = () => {
     setIsLogin(!isLogin);
     setFormData({ nombre_usuario: "", correo: "", password: "" });
+    setMessage("");
   };
 
   const handleChange = (e) => {
@@ -27,13 +29,53 @@ export default function LoginRegisterForm() {
   };
 
   const handleLogin = async () => {
-    // Reemplaza esta parte con tu llamada real al backend
-    console.log("Login:", formData);
+    try {
+      const res = await fetch("http://localhost:5000/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem("usuario", JSON.stringify(data.usuario));
+        setMessage("Inicio de sesión exitoso.");
+      } else {
+        setMessage(data.error || "Error al iniciar sesión.");
+      }
+    // eslint-disable-next-line no-unused-vars
+    } catch (error) {
+      setMessage("Error de red al intentar iniciar sesión.");
+    }
   };
 
   const handleRegister = async () => {
-    // Reemplaza esta parte con tu llamada real al backend
-    console.log("Register:", formData);
+    try {
+      const res = await fetch("http://localhost:5000/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre_usuario: formData.nombre_usuario,
+          email: formData.email,
+          password: formData.password,
+          id_rol: 1, // Asume que 1 es el rol de cliente. Ajusta según tu BD.
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setMessage("Registro exitoso. Ahora puedes iniciar sesión.");
+        setIsLogin(true);
+      } else {
+        setMessage(data.error || "Error al registrar usuario.");
+      }
+    // eslint-disable-next-line no-unused-vars
+    } catch (error) {
+      setMessage("Error de red al intentar registrar.");
+    }
   };
 
   return (
@@ -42,32 +84,36 @@ export default function LoginRegisterForm() {
         {isLogin ? "Iniciar Sesión" : "Registro de Usuario"}
       </h2>
 
+      {message && (
+        <div className="mb-4 text-center text-sm text-red-600">{message}</div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium">Correo</label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            className="w-full border p-2 rounded"
+          />
+        </div>
+
         {!isLogin && (
           <div>
-            <label className="block text-sm font-medium">Correo</label>
+            <label className="block text-sm font-medium">Nombre de Usuario</label>
             <input
-              type="email"
-              name="correo"
-              value={formData.correo}
+              type="text"
+              name="nombre_usuario"
+              value={formData.nombre_usuario}
               onChange={handleChange}
               required
               className="w-full border p-2 rounded"
             />
           </div>
         )}
-
-        <div>
-          <label className="block text-sm font-medium">Nombre de Usuario</label>
-          <input
-            type="text"
-            name="nombre_usuario"
-            value={formData.nombre_usuario}
-            onChange={handleChange}
-            required
-            className="w-full border p-2 rounded"
-          />
-        </div>
 
         <div>
           <label className="block text-sm font-medium">Contraseña</label>
