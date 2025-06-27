@@ -1,17 +1,19 @@
 import React, { useState } from "react";
+import { useNavigate } from 'react-router-dom';
 
 export default function LoginRegisterForm() {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     nombre_usuario: "",
-    correo: "",
+    email: "",
     password: "",
   });
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   const toggleMode = () => {
     setIsLogin(!isLogin);
-    setFormData({ nombre_usuario: "", correo: "", password: "" });
+    setFormData({ nombre_usuario: "", email: "", password: "" });
     setMessage("");
   };
 
@@ -41,12 +43,13 @@ export default function LoginRegisterForm() {
 
       const data = await res.json();
       if (res.ok) {
+        localStorage.setItem("token", data.token);
         localStorage.setItem("usuario", JSON.stringify(data.usuario));
         setMessage("Inicio de sesión exitoso.");
+        navigate('/dashboard');
       } else {
         setMessage(data.error || "Error al iniciar sesión.");
       }
-    // eslint-disable-next-line no-unused-vars
     } catch (error) {
       setMessage("Error de red al intentar iniciar sesión.");
     }
@@ -72,7 +75,6 @@ export default function LoginRegisterForm() {
       } else {
         setMessage(data.error || "Error al registrar usuario.");
       }
-    // eslint-disable-next-line no-unused-vars
     } catch (error) {
       setMessage("Error de red al intentar registrar.");
     }
