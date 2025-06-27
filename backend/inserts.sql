@@ -62,7 +62,7 @@ INSERT INTO SolicitudesMantenimiento (
 (2, '2024-07-01', 'Cambio de filtro de agua', 2, '2024-07-02', NULL);
 
 INSERT INTO GananciasMaquina (
-    id_alquiler, mes, año, ganancia_cliente, ganancia_empresa, total_ventas
+    id_alquiler, mes, anio, ganancia_cliente, ganancia_empresa, total_ventas
 ) VALUES
 (1, 5, 2024, 5000.00, 1000.00, 6000.00),
 (2, 5, 2024, 7000.00, 1400.00, 8400.00);

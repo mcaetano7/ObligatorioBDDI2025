@@ -13,6 +13,19 @@ IF ERRORLEVEL 1 (
     mysql -u root -p%MYSQL_ROOT_PASSWORD% < backend\script.sql
 ) ELSE (
     echo La base de datos CafesMarloy ya existe.
+    :: Verificar si la tabla 'roles' tiene registros
+    for /f %%A in ('mysql -u root -p%MYSQL_ROOT_PASSWORD% -D CafesMarloy -N -e "SELECT COUNT(*) FROM roles;"') do (
+        set COUNT=%%A
+    )
+
+    setlocal enabledelayedexpansion
+    if "!COUNT!"=="0" (
+        echo La base de datos está vacía. Ejecutando inserts.sql...
+        mysql -u root -p%MYSQL_ROOT_PASSWORD% CafesMarloy < backend\inserts.sql
+    ) else (
+        echo La base de datos ya contiene datos.
+    )
+    endlocal
 )
 
 :: ===== 3. Actualizar archivo .env con la contraseña =====
@@ -35,7 +48,7 @@ IF NOT EXIST ".venv_installed" (
     echo > .venv_installed
 )
 
-:: === 4.1 Verificar que dotenv esté instalado ===
+:: === 4.1 Verificar que dotenv esté instalado ===  esto es medio al pedo porque ya esta en requeriments.txt pero bue, si funciona no se toca
 pip show python-dotenv >nul 2>&1
 IF ERRORLEVEL 1 (
     echo Instalando python-dotenv...

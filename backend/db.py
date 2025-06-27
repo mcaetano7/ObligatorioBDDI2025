@@ -9,5 +9,5 @@ def get_connection():
         host='localhost',
         user='root',
         password=os.getenv("MYSQL_ROOT_PASSWORD"),
-        database='cafes_marloy'
+        database='CafesMarloy'
     )
