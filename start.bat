@@ -43,9 +43,22 @@ IF NOT EXIST "venv" (
 call venv\Scripts\activate
 
 IF NOT EXIST ".venv_installed" (
-    echo Instalando dependencias del backend...
-    pip install -r requirements.txt
-    echo > .venv_installed
+    IF EXIST "requirements.txt" (
+        echo Instalando dependencias del backend...
+        pip install -r requirements.txt
+
+        IF %ERRORLEVEL% NEQ 0 (
+            echo Error instalando dependencias
+            pause
+            exit /b
+        ) ELSE (
+            echo > .venv_installed
+        )
+    ) ELSE (
+        echo No se encontraron requirements.txt en backend\ 
+        pause
+        exit /b
+   )
 )
 
 :: === 4.1 Verificar que dotenv esté instalado ===  esto es medio al pedo porque ya esta en requeriments.txt pero bue, si funciona no se toca
