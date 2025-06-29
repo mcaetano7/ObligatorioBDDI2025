@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from db import get_connection
+import bcrypt
 
 cliente_bp = Blueprint('cliente', __name__, url_prefix='/cliente')
 
@@ -120,3 +121,106 @@ def crear_solicitud():
     cursor.close()
     conn.close()
     return jsonify({'mensaje': 'Solicitud de mantenimiento creada'})
+
+# Rutas de administrador para gestión de clientes
+@cliente_bp.route('/', methods=['GET'])
+def listar_clientes():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    query = """
+        SELECT c.*, u.nombre_usuario, u.email, COUNT(a.id_alquiler) as cantidad_alquileres
+        FROM Clientes c
+        LEFT JOIN Usuarios u ON c.rut = u.id_usuario
+        LEFT JOIN Alquileres a ON c.id_cliente = a.id_cliente
+        GROUP BY c.id_cliente
+        ORDER BY c.nombre_empresa
+    """
+    cursor.execute(query)
+    resultados = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(resultados)
+
+@cliente_bp.route('/', methods=['POST'])
+def crear_cliente():
+    data = request.json
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    # Hash de la contraseña usando bcrypt
+    password_hash = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
+    
+    # Primero crear el usuario
+    query_usuario = """
+        INSERT INTO Usuarios (nombre_usuario, email, password_hash, id_rol)
+        VALUES (%s, %s, %s, 2)
+    """
+    cursor.execute(query_usuario, (
+        data['nombre_empresa'],
+        data['email'],
+        password_hash
+    ))
+    id_usuario = cursor.lastrowid
+    
+    # Luego crear el cliente
+    query_cliente = """
+        INSERT INTO Clientes (rut, nombre_empresa, direccion, telefono)
+        VALUES (%s, %s, %s, %s)
+    """
+    cursor.execute(query_cliente, (
+        id_usuario,
+        data['nombre_empresa'],
+        data.get('direccion'),
+        data.get('telefono')
+    ))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({'mensaje': 'Cliente creado correctamente'}), 201
+
+@cliente_bp.route('/<int:id_cliente>', methods=['PUT'])
+def actualizar_cliente(id_cliente):
+    data = request.json
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    query = """
+        UPDATE Clientes 
+        SET nombre_empresa = %s, direccion = %s, telefono = %s
+        WHERE id_cliente = %s
+    """
+    cursor.execute(query, (
+        data['nombre_empresa'],
+        data.get('direccion'),
+        data.get('telefono'),
+        id_cliente
+    ))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({'mensaje': 'Cliente actualizado correctamente'})
+
+@cliente_bp.route('/<int:id_cliente>', methods=['DELETE'])
+def eliminar_cliente(id_cliente):
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    # Verificar si el cliente tiene alquileres
+    cursor.execute("SELECT COUNT(*) as count FROM Alquileres WHERE id_cliente = %s", (id_cliente,))
+    result = cursor.fetchone()
+    if result[0] > 0:
+        cursor.close()
+        conn.close()
+        return jsonify({'error': 'No se puede eliminar un cliente que tiene alquileres'}), 400
+    
+    # Obtener el rut del cliente para eliminar también el usuario
+    cursor.execute("SELECT rut FROM Clientes WHERE id_cliente = %s", (id_cliente,))
+    rut = cursor.fetchone()[0]
+    
+    # Eliminar cliente y usuario
+    cursor.execute("DELETE FROM Clientes WHERE id_cliente = %s", (id_cliente,))
+    cursor.execute("DELETE FROM Usuarios WHERE id_usuario = %s", (rut,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({'mensaje': 'Cliente eliminado correctamente'})
