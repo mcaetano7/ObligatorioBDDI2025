@@ -60,3 +60,54 @@ def obtener_id_cliente(id_usuario):
         return jsonify(row)
     else:
         return jsonify({'error': 'Cliente no encontrado'}), 404
+    
+@cliente_bp.route('/alquileres-cliente/<int:id_cliente>', methods=['GET'])
+def alquileres_por_cliente(id_cliente):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    query = "SELECT * FROM Alquileres WHERE id_cliente = %s"
+    cursor.execute(query, (id_cliente,))
+    alquileres = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(alquileres)
+
+@cliente_bp.route('/solicitudes', methods=['POST'])
+def solicitar_mantenimiento():
+    data = request.json
+    id_alquiler = data.get('id_alquiler')
+    descripcion = data.get('descripcion')
+
+    if not all([id_alquiler, descripcion]):
+        return jsonify({'error': 'Faltan datos'}), 400
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO SolicitudesMantenimiento (id_alquiler, fecha_solicitud, descripcion) VALUES (%s, CURDATE(), %s)",
+        (id_alquiler, descripcion)
+    )
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({'mensaje': 'Solicitud enviada'}), 201
+
+@cliente_bp.route('/ganancias-maquina/<int:id_cliente>', methods=['GET'])
+def ganancias_por_maquina(id_cliente):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    query = """
+    SELECT m.modelo, m.marca, a.id_alquiler, gm.mes, gm.anio,
+           gm.ganancia_cliente, gm.ganancia_empresa, gm.total_ventas
+    FROM GananciasMaquina gm
+    JOIN Alquileres a ON gm.id_alquiler = a.id_alquiler
+    JOIN Maquinas m ON a.id_maquina = m.id_maquina
+    WHERE a.id_cliente = %s
+    ORDER BY gm.anio DESC, gm.mes DESC
+    """
+    cursor.execute(query, (id_cliente,))
+    data = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(data)

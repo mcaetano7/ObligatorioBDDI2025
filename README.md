@@ -42,3 +42,8 @@ seleccionar React y JavaScript ?? como se hace esto
 2) ejecutar el proyecto
 
 npm run dev
+
+# IMPORTANTE:
+
+A efectos de esta implementacion se da por echo que todas las maquinas venden todos los cafes posible en base a los insumos comprados.
+De esa forma podemos calcular las ganancias generadas por las maquinas.
