@@ -17,6 +17,7 @@ const Clientes = () => {
         if (!res.ok) throw new Error('Error al obtener clientes');
         const data = await res.json();
         setClientes(data);
+      // eslint-disable-next-line no-unused-vars
       } catch (err) {
         setError('No se pudieron cargar los clientes');
       }

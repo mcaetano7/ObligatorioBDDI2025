@@ -11,7 +11,7 @@ CORS(app)
 
 # Registrar blueprints
 app.register_blueprint(cliente_bp)
-#app.register_blueprint(maquinas_bp)
+app.register_blueprint(maquinas_bp)
 app.register_blueprint(auth_bp)
 
 @app.route('/')

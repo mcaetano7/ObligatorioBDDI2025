@@ -7,18 +7,31 @@ export default function LoginRegisterForm() {
     nombre_usuario: "",
     email: "",
     password: "",
+    id_rol: 1,
+    nombre_empresa: "",
+    direccion: "",
+    telefono: ""
   });
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
   const toggleMode = () => {
     setIsLogin(!isLogin);
-    setFormData({ nombre_usuario: "", email: "", password: "" });
+    setFormData({
+      nombre_usuario: "",
+      email: "",
+      password: "",
+      id_rol: 1,
+      nombre_empresa: "",
+      direccion: "",
+      telefono: ""
+    });
     setMessage("");
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = (e) => {
@@ -37,19 +50,19 @@ export default function LoginRegisterForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: formData.email,
-          password: formData.password,
+          password: formData.password
         }),
       });
 
       const data = await res.json();
       if (res.ok) {
-        localStorage.setItem("token", data.token);
         localStorage.setItem("usuario", JSON.stringify(data.usuario));
         setMessage("Inicio de sesión exitoso.");
         navigate('/dashboard');
       } else {
         setMessage(data.error || "Error al iniciar sesión.");
       }
+    // eslint-disable-next-line no-unused-vars
     } catch (error) {
       setMessage("Error de red al intentar iniciar sesión.");
     }
@@ -60,12 +73,7 @@ export default function LoginRegisterForm() {
       const res = await fetch("http://localhost:5000/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nombre_usuario: formData.nombre_usuario,
-          email: formData.email,
-          password: formData.password,
-          id_rol: 1, // Asume que 1 es el rol de cliente. Ajusta según tu BD.
-        }),
+        body: JSON.stringify(formData),
       });
 
       const data = await res.json();
@@ -75,6 +83,7 @@ export default function LoginRegisterForm() {
       } else {
         setMessage(data.error || "Error al registrar usuario.");
       }
+    // eslint-disable-next-line no-unused-vars
     } catch (error) {
       setMessage("Error de red al intentar registrar.");
     }
@@ -104,17 +113,56 @@ export default function LoginRegisterForm() {
         </div>
 
         {!isLogin && (
-          <div>
-            <label className="block text-sm font-medium">Nombre de Usuario</label>
-            <input
-              type="text"
-              name="nombre_usuario"
-              value={formData.nombre_usuario}
-              onChange={handleChange}
-              required
-              className="w-full border p-2 rounded"
-            />
-          </div>
+          <>
+            <div>
+              <label className="block text-sm font-medium">Nombre de Usuario</label>
+              <input
+                type="text"
+                name="nombre_usuario"
+                value={formData.nombre_usuario}
+                onChange={handleChange}
+                required
+                className="w-full border p-2 rounded"
+              />
+            </div>
+            {formData.id_rol === 1 && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium">Nombre Empresa</label>
+                  <input
+                    type="text"
+                    name="nombre_empresa"
+                    value={formData.nombre_empresa}
+                    onChange={handleChange}
+                    required
+                    className="w-full border p-2 rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium">Dirección</label>
+                  <input
+                    type="text"
+                    name="direccion"
+                    value={formData.direccion}
+                    onChange={handleChange}
+                    required
+                    className="w-full border p-2 rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium">Teléfono</label>
+                  <input
+                    type="text"
+                    name="telefono"
+                    value={formData.telefono}
+                    onChange={handleChange}
+                    required
+                    className="w-full border p-2 rounded"
+                  />
+                </div>
+              </>
+            )}
+          </>
         )}
 
         <div>

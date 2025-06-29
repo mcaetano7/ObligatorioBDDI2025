@@ -32,7 +32,10 @@ function App() {
     <div style={{ padding: '2rem' }}>
       <h1>Panel Cafés Marloy</h1>
       <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" />} />
+        <Route path="/" element={<LoginRegisterForm />} />
+
+
+
         <Route path="/login" element={<LoginRegisterForm />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
