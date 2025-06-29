@@ -88,6 +88,16 @@ def registrar_consumo():
     conn = get_connection()
     cursor = conn.cursor()
     
+    # Validar datos requeridos
+    if not all(key in data for key in ['id_alquiler', 'id_insumo', 'cantidad_consumida']):
+        return jsonify({'error': 'Faltan campos requeridos'}), 400
+    
+    # Usar fecha actual si no se proporciona
+    fecha_consumo = data.get('fecha_consumo')
+    if not fecha_consumo:
+        from datetime import date
+        fecha_consumo = date.today().isoformat()
+    
     query = """
         INSERT INTO ConsumoInsumos (id_alquiler, id_insumo, cantidad_consumida, fecha_consumo)
         VALUES (%s, %s, %s, %s)
@@ -96,7 +106,7 @@ def registrar_consumo():
         data['id_alquiler'],
         data['id_insumo'],
         data['cantidad_consumida'],
-        data.get('fecha_consumo', 'CURDATE()')
+        fecha_consumo
     ))
     conn.commit()
     cursor.close()

@@ -1,49 +1,93 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const Tecnicos = () => {
-  // Placeholder: cuando el backend esté listo, usar useEffect para fetch real
-  const [tecnicos, setTecnicos] = useState([
-    // Ejemplo de datos estáticos
-    { id_tecnico: 1, nombre_tecnico: 'Juan Pérez', telefono: '099123456', email: 'juan.perez@tecnicos.com' },
-    { id_tecnico: 2, nombre_tecnico: 'María Gómez', telefono: '098654321', email: 'maria.gomez@tecnicos.com' },
-  ]);
+  const [tecnicos, setTecnicos] = useState([]);
+  const [error, setError] = useState('');
   const [form, setForm] = useState({ nombre_tecnico: '', telefono: '', email: '' });
   const [editId, setEditId] = useState(null);
+
+  const fetchTecnicos = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/tecnicos/');
+      if (!res.ok) throw new Error('Error al obtener técnicos');
+      const data = await res.json();
+      setTecnicos(data);
+    } catch (err) {
+      setError('No se pudieron cargar los técnicos');
+    }
+  };
+
+  useEffect(() => {
+    fetchTecnicos();
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert('Alta de técnico no implementada aún.');
-    // Aquí irá el fetch POST cuando el backend esté listo
+    try {
+      const res = await fetch('http://localhost:5000/tecnicos/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error('Error al crear técnico');
+      setForm({ nombre_tecnico: '', telefono: '', email: '' });
+      fetchTecnicos();
+    } catch (err) {
+      setError('Error al crear técnico');
+    }
   };
 
   const handleEdit = (tecnico) => {
     setEditId(tecnico.id_tecnico);
     setForm({
       nombre_tecnico: tecnico.nombre_tecnico,
-      telefono: tecnico.telefono,
-      email: tecnico.email,
+      telefono: tecnico.telefono || '',
+      email: tecnico.email || '',
     });
   };
 
-  const handleUpdate = (e) => {
+  const handleUpdate = async (e) => {
     e.preventDefault();
-    alert('Edición de técnico no implementada aún.');
-    setEditId(null);
-    // Aquí irá el fetch PUT cuando el backend esté listo
+    try {
+      const res = await fetch(`http://localhost:5000/tecnicos/${editId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error('Error al actualizar técnico');
+      setEditId(null);
+      setForm({ nombre_tecnico: '', telefono: '', email: '' });
+      fetchTecnicos();
+    } catch (err) {
+      setError('Error al actualizar técnico');
+    }
   };
 
-  const handleDelete = (id) => {
-    alert('Eliminación de técnico no implementada aún.');
-    // Aquí irá el fetch DELETE cuando el backend esté listo
+  const handleDelete = async (id) => {
+    if (!window.confirm('¿Estás seguro de que quieres eliminar este técnico?')) return;
+    try {
+      const res = await fetch(`http://localhost:5000/tecnicos/${id}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) throw new Error('Error al eliminar técnico');
+      fetchTecnicos();
+    } catch (err) {
+      setError('Error al eliminar técnico');
+    }
   };
 
   return (
     <div>
       <h2>Técnicos</h2>
+      {error && <p style={{color:'red'}}>{error}</p>}
       <ul>
         {tecnicos.length === 0 ? (
           <li>No hay técnicos para mostrar.</li>
@@ -53,14 +97,14 @@ const Tecnicos = () => {
               {editId === tecnico.id_tecnico ? (
                 <form onSubmit={handleUpdate} style={{display:'inline'}}>
                   <input name="nombre_tecnico" value={form.nombre_tecnico} onChange={handleChange} required />
-                  <input name="telefono" value={form.telefono} onChange={handleChange} required />
-                  <input name="email" value={form.email} onChange={handleChange} required />
+                  <input name="telefono" value={form.telefono} onChange={handleChange} />
+                  <input name="email" value={form.email} onChange={handleChange} />
                   <button type="submit">Guardar</button>
                   <button type="button" onClick={()=>setEditId(null)}>Cancelar</button>
                 </form>
               ) : (
                 <>
-                  <b>{tecnico.nombre_tecnico}</b> | {tecnico.telefono} | {tecnico.email}
+                  <b>{tecnico.nombre_tecnico}</b> | {tecnico.telefono || 'Sin teléfono'} | {tecnico.email || 'Sin email'} | Mantenimientos: {tecnico.cantidad_mantenimientos || 0}
                   <button onClick={()=>handleEdit(tecnico)}>Editar</button>
                   <button onClick={()=>handleDelete(tecnico.id_tecnico)}>Eliminar</button>
                 </>
@@ -72,8 +116,8 @@ const Tecnicos = () => {
       <h3>Agregar Técnico</h3>
       <form onSubmit={handleSubmit}>
         <input name="nombre_tecnico" placeholder="Nombre técnico" value={form.nombre_tecnico} onChange={handleChange} required />
-        <input name="telefono" placeholder="Teléfono" value={form.telefono} onChange={handleChange} required />
-        <input name="email" placeholder="Email" value={form.email} onChange={handleChange} required />
+        <input name="telefono" placeholder="Teléfono (opcional)" value={form.telefono} onChange={handleChange} />
+        <input name="email" placeholder="Email (opcional)" value={form.email} onChange={handleChange} />
         <button type="submit">Agregar</button>
       </form>
     </div>

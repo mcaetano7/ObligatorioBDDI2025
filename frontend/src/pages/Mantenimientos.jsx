@@ -1,52 +1,123 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const Mantenimientos = () => {
-  // Placeholder: cuando el backend esté listo, usar useEffect para fetch real
-  const [mantenimientos, setMantenimientos] = useState([
-    // Ejemplo de datos estáticos
-    { id_solicitud: 1, id_alquiler: 1, fecha_solicitud: '2024-06-15', descripcion: 'Revisión general máquina', id_tecnico_asignado: 1, fecha_asignacion: '2024-06-16', fecha_resolucion: '2024-06-18' },
-    { id_solicitud: 2, id_alquiler: 2, fecha_solicitud: '2024-07-01', descripcion: 'Cambio de filtro de agua', id_tecnico_asignado: 2, fecha_asignacion: '2024-07-02', fecha_resolucion: null },
-  ]);
-  const [form, setForm] = useState({ id_alquiler: '', fecha_solicitud: '', descripcion: '', id_tecnico_asignado: '', fecha_asignacion: '', fecha_resolucion: '' });
+  const [mantenimientos, setMantenimientos] = useState([]);
+  const [error, setError] = useState('');
+  const [form, setForm] = useState({ id_alquiler: '', descripcion: '' });
   const [editId, setEditId] = useState(null);
+
+  const fetchMantenimientos = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/mantenimientos/');
+      if (!res.ok) throw new Error('Error al obtener mantenimientos');
+      const data = await res.json();
+      setMantenimientos(data);
+    } catch (err) {
+      setError('No se pudieron cargar los mantenimientos');
+    }
+  };
+
+  useEffect(() => {
+    fetchMantenimientos();
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert('Alta de mantenimiento no implementada aún.');
-    // Aquí irá el fetch POST cuando el backend esté listo
+    try {
+      const res = await fetch('http://localhost:5000/mantenimientos/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error('Error al crear mantenimiento');
+      setForm({ id_alquiler: '', descripcion: '' });
+      fetchMantenimientos();
+    } catch (err) {
+      setError('Error al crear mantenimiento');
+    }
   };
 
   const handleEdit = (mantenimiento) => {
     setEditId(mantenimiento.id_solicitud);
     setForm({
       id_alquiler: mantenimiento.id_alquiler,
-      fecha_solicitud: mantenimiento.fecha_solicitud,
       descripcion: mantenimiento.descripcion,
-      id_tecnico_asignado: mantenimiento.id_tecnico_asignado,
-      fecha_asignacion: mantenimiento.fecha_asignacion,
-      fecha_resolucion: mantenimiento.fecha_resolucion || '',
     });
   };
 
-  const handleUpdate = (e) => {
+  const handleUpdate = async (e) => {
     e.preventDefault();
-    alert('Edición de mantenimiento no implementada aún.');
-    setEditId(null);
-    // Aquí irá el fetch PUT cuando el backend esté listo
+    try {
+      const res = await fetch(`http://localhost:5000/mantenimientos/${editId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error('Error al actualizar mantenimiento');
+      setEditId(null);
+      setForm({ id_alquiler: '', descripcion: '' });
+      fetchMantenimientos();
+    } catch (err) {
+      setError('Error al actualizar mantenimiento');
+    }
   };
 
-  const handleDelete = (id) => {
-    alert('Eliminación de mantenimiento no implementada aún.');
-    // Aquí irá el fetch DELETE cuando el backend esté listo
+  const handleDelete = async (id) => {
+    if (!window.confirm('¿Estás seguro de que quieres eliminar este mantenimiento?')) return;
+    try {
+      const res = await fetch(`http://localhost:5000/mantenimientos/${id}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) throw new Error('Error al eliminar mantenimiento');
+      fetchMantenimientos();
+    } catch (err) {
+      setError('Error al eliminar mantenimiento');
+    }
+  };
+
+  const handleAsignarTecnico = async (idSolicitud, idTecnico) => {
+    try {
+      const res = await fetch('http://localhost:5000/mantenimientos/asignar-tecnico', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id_solicitud: idSolicitud,
+          id_tecnico: idTecnico
+        }),
+      });
+      if (!res.ok) throw new Error('Error al asignar técnico');
+      fetchMantenimientos();
+    } catch (err) {
+      setError('Error al asignar técnico');
+    }
+  };
+
+  const handleCompletar = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:5000/mantenimientos/completar/${id}`, {
+        method: 'POST',
+      });
+      if (!res.ok) throw new Error('Error al completar mantenimiento');
+      fetchMantenimientos();
+    } catch (err) {
+      setError('Error al completar mantenimiento');
+    }
   };
 
   return (
     <div>
       <h2>Mantenimientos</h2>
+      {error && <p style={{color:'red'}}>{error}</p>}
       <ul>
         {mantenimientos.length === 0 ? (
           <li>No hay mantenimientos para mostrar.</li>
@@ -56,19 +127,18 @@ const Mantenimientos = () => {
               {editId === m.id_solicitud ? (
                 <form onSubmit={handleUpdate} style={{display:'inline'}}>
                   <input name="id_alquiler" value={form.id_alquiler} onChange={handleChange} required />
-                  <input name="fecha_solicitud" value={form.fecha_solicitud} onChange={handleChange} required />
                   <input name="descripcion" value={form.descripcion} onChange={handleChange} required />
-                  <input name="id_tecnico_asignado" value={form.id_tecnico_asignado} onChange={handleChange} required />
-                  <input name="fecha_asignacion" value={form.fecha_asignacion} onChange={handleChange} required />
-                  <input name="fecha_resolucion" value={form.fecha_resolucion} onChange={handleChange} />
                   <button type="submit">Guardar</button>
                   <button type="button" onClick={()=>setEditId(null)}>Cancelar</button>
                 </form>
               ) : (
                 <>
-                  <b>Alquiler:</b> {m.id_alquiler} | <b>Fecha solicitud:</b> {m.fecha_solicitud} | <b>Descripción:</b> {m.descripcion} | <b>Técnico:</b> {m.id_tecnico_asignado} | <b>Asignación:</b> {m.fecha_asignacion} | <b>Resolución:</b> {m.fecha_resolucion || 'Pendiente'}
+                  <b>Cliente:</b> {m.nombre_empresa} | <b>Máquina:</b> {m.modelo} {m.marca} | <b>Descripción:</b> {m.descripcion} | <b>Técnico:</b> {m.nombre_tecnico || 'Sin asignar'} | <b>Estado:</b> {m.fecha_resolucion ? 'Completado' : 'Pendiente'}
                   <button onClick={()=>handleEdit(m)}>Editar</button>
                   <button onClick={()=>handleDelete(m.id_solicitud)}>Eliminar</button>
+                  {!m.fecha_resolucion && (
+                    <button onClick={()=>handleCompletar(m.id_solicitud)}>Completar</button>
+                  )}
                 </>
               )}
             </li>
@@ -78,11 +148,7 @@ const Mantenimientos = () => {
       <h3>Agregar Mantenimiento</h3>
       <form onSubmit={handleSubmit}>
         <input name="id_alquiler" placeholder="ID Alquiler" value={form.id_alquiler} onChange={handleChange} required />
-        <input name="fecha_solicitud" placeholder="Fecha solicitud" value={form.fecha_solicitud} onChange={handleChange} required />
         <input name="descripcion" placeholder="Descripción" value={form.descripcion} onChange={handleChange} required />
-        <input name="id_tecnico_asignado" placeholder="ID Técnico" value={form.id_tecnico_asignado} onChange={handleChange} required />
-        <input name="fecha_asignacion" placeholder="Fecha asignación" value={form.fecha_asignacion} onChange={handleChange} required />
-        <input name="fecha_resolucion" placeholder="Fecha resolución (opcional)" value={form.fecha_resolucion} onChange={handleChange} />
         <button type="submit">Agregar</button>
       </form>
     </div>

@@ -6,21 +6,18 @@ const Maquinas = () => {
   const [form, setForm] = useState({ modelo: '', marca: '', capacidad_cafe: '', capacidad_agua: '', costo_mensual_alquiler: '', porcentaje_ganancia_empresa: '' });
   const [editId, setEditId] = useState(null);
 
+  const fetchMaquinas = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/maquinas/');
+      if (!res.ok) throw new Error('Error al obtener máquinas');
+      const data = await res.json();
+      setMaquinas(data);
+    } catch (err) {
+      setError('No se pudieron cargar las máquinas');
+    }
+  };
+
   useEffect(() => {
-    const fetchMaquinas = async () => {
-      try {
-        const res = await fetch('http://localhost:5000/maquinas', {
-          headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('token'),
-          },
-        });
-        if (!res.ok) throw new Error('Error al obtener máquinas');
-        const data = await res.json();
-        setMaquinas(data);
-      } catch (err) {
-        setError('No se pudieron cargar las máquinas');
-      }
-    };
     fetchMaquinas();
   }, []);
 
@@ -28,10 +25,22 @@ const Maquinas = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert('Alta de máquina no implementada aún.');
-    // Aquí irá el fetch POST cuando el backend esté listo
+    try {
+      const res = await fetch('http://localhost:5000/maquinas/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error('Error al crear máquina');
+      setForm({ modelo: '', marca: '', capacidad_cafe: '', capacidad_agua: '', costo_mensual_alquiler: '', porcentaje_ganancia_empresa: '' });
+      fetchMaquinas();
+    } catch (err) {
+      setError('Error al crear máquina');
+    }
   };
 
   const handleEdit = (maquina) => {
@@ -46,16 +55,36 @@ const Maquinas = () => {
     });
   };
 
-  const handleUpdate = (e) => {
+  const handleUpdate = async (e) => {
     e.preventDefault();
-    alert('Edición de máquina no implementada aún.');
-    setEditId(null);
-    // Aquí irá el fetch PUT cuando el backend esté listo
+    try {
+      const res = await fetch(`http://localhost:5000/maquinas/${editId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error('Error al actualizar máquina');
+      setEditId(null);
+      setForm({ modelo: '', marca: '', capacidad_cafe: '', capacidad_agua: '', costo_mensual_alquiler: '', porcentaje_ganancia_empresa: '' });
+      fetchMaquinas();
+    } catch (err) {
+      setError('Error al actualizar máquina');
+    }
   };
 
-  const handleDelete = (id) => {
-    alert('Eliminación de máquina no implementada aún.');
-    // Aquí irá el fetch DELETE cuando el backend esté listo
+  const handleDelete = async (id) => {
+    if (!window.confirm('¿Estás seguro de que quieres eliminar esta máquina?')) return;
+    try {
+      const res = await fetch(`http://localhost:5000/maquinas/${id}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) throw new Error('Error al eliminar máquina');
+      fetchMaquinas();
+    } catch (err) {
+      setError('Error al eliminar máquina');
+    }
   };
 
   return (
