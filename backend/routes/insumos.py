@@ -1,0 +1,143 @@
+from flask import Blueprint, jsonify, request
+from db import get_connection
+
+insumos_bp = Blueprint('insumos', __name__, url_prefix='/insumos')
+
+@insumos_bp.route('/', methods=['GET'])
+def listar_insumos():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    query = """
+        SELECT i.*, p.nombre_proveedor
+        FROM Insumos i
+        LEFT JOIN Proveedores p ON i.id_proveedor = p.id_proveedor
+        ORDER BY i.nombre_insumo
+    """
+    cursor.execute(query)
+    resultados = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(resultados)
+
+@insumos_bp.route('/', methods=['POST'])
+def crear_insumo():
+    data = request.json
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    query = """
+        INSERT INTO Insumos (nombre_insumo, unidad_medida, costo_unitario, id_proveedor)
+        VALUES (%s, %s, %s, %s)
+    """
+    cursor.execute(query, (
+        data['nombre_insumo'],
+        data['unidad_medida'],
+        data['costo_unitario'],
+        data.get('id_proveedor')
+    ))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({'mensaje': 'Insumo creado correctamente'}), 201
+
+@insumos_bp.route('/<int:id_insumo>', methods=['PUT'])
+def actualizar_insumo(id_insumo):
+    data = request.json
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    query = """
+        UPDATE Insumos 
+        SET nombre_insumo = %s, unidad_medida = %s, costo_unitario = %s, id_proveedor = %s
+        WHERE id_insumo = %s
+    """
+    cursor.execute(query, (
+        data['nombre_insumo'],
+        data['unidad_medida'],
+        data['costo_unitario'],
+        data.get('id_proveedor'),
+        id_insumo
+    ))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({'mensaje': 'Insumo actualizado correctamente'})
+
+@insumos_bp.route('/<int:id_insumo>', methods=['DELETE'])
+def eliminar_insumo(id_insumo):
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    # Verificar si el insumo está siendo usado
+    cursor.execute("SELECT COUNT(*) as count FROM ConsumoInsumos WHERE id_insumo = %s", (id_insumo,))
+    result = cursor.fetchone()
+    if result[0] > 0:
+        cursor.close()
+        conn.close()
+        return jsonify({'error': 'No se puede eliminar un insumo que tiene registros de consumo'}), 400
+    
+    cursor.execute("DELETE FROM Insumos WHERE id_insumo = %s", (id_insumo,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({'mensaje': 'Insumo eliminado correctamente'})
+
+@insumos_bp.route('/consumo', methods=['POST'])
+def registrar_consumo():
+    data = request.json
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    query = """
+        INSERT INTO ConsumoInsumos (id_alquiler, id_insumo, cantidad_consumida, fecha_consumo)
+        VALUES (%s, %s, %s, %s)
+    """
+    cursor.execute(query, (
+        data['id_alquiler'],
+        data['id_insumo'],
+        data['cantidad_consumida'],
+        data.get('fecha_consumo', 'CURDATE()')
+    ))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({'mensaje': 'Consumo registrado correctamente'}), 201
+
+@insumos_bp.route('/consumo/<int:id_alquiler>', methods=['GET'])
+def obtener_consumo_alquiler(id_alquiler):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    query = """
+        SELECT ci.*, i.nombre_insumo, i.unidad_medida, i.costo_unitario
+        FROM ConsumoInsumos ci
+        JOIN Insumos i ON ci.id_insumo = i.id_insumo
+        WHERE ci.id_alquiler = %s
+        ORDER BY ci.fecha_consumo DESC
+    """
+    cursor.execute(query, (id_alquiler,))
+    data = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(data)
+
+@insumos_bp.route('/reporte-consumo', methods=['GET'])
+def reporte_consumo():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    query = """
+        SELECT 
+            i.nombre_insumo,
+            i.unidad_medida,
+            SUM(ci.cantidad_consumida) as total_consumido,
+            SUM(ci.cantidad_consumida * i.costo_unitario) as costo_total,
+            COUNT(ci.id_consumo) as veces_consumido
+        FROM Insumos i
+        LEFT JOIN ConsumoInsumos ci ON i.id_insumo = ci.id_insumo
+        GROUP BY i.id_insumo, i.nombre_insumo, i.unidad_medida
+        ORDER BY total_consumido DESC
+    """
+    cursor.execute(query)
+    data = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(data) 
