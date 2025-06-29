@@ -25,6 +25,26 @@ def crear_insumo():
     conn = get_connection()
     cursor = conn.cursor()
     
+    # Validar datos requeridos
+    if not all(key in data for key in ['nombre_insumo', 'unidad_medida', 'costo_unitario']):
+        return jsonify({'error': 'Faltan campos requeridos'}), 400
+    
+    # Convertir costo_unitario a float
+    try:
+        costo_unitario = float(data['costo_unitario'])
+    except (ValueError, TypeError):
+        return jsonify({'error': 'El costo unitario debe ser un número válido'}), 400
+    
+    # Manejar id_proveedor (puede ser None si no se proporciona)
+    id_proveedor = data.get('id_proveedor')
+    if id_proveedor == '' or id_proveedor is None:
+        id_proveedor = None
+    else:
+        try:
+            id_proveedor = int(id_proveedor)
+        except (ValueError, TypeError):
+            return jsonify({'error': 'El ID del proveedor debe ser un número válido'}), 400
+    
     query = """
         INSERT INTO Insumos (nombre_insumo, unidad_medida, costo_unitario, id_proveedor)
         VALUES (%s, %s, %s, %s)
@@ -32,8 +52,8 @@ def crear_insumo():
     cursor.execute(query, (
         data['nombre_insumo'],
         data['unidad_medida'],
-        data['costo_unitario'],
-        data.get('id_proveedor')
+        costo_unitario,
+        id_proveedor
     ))
     conn.commit()
     cursor.close()
@@ -46,6 +66,26 @@ def actualizar_insumo(id_insumo):
     conn = get_connection()
     cursor = conn.cursor()
     
+    # Validar datos requeridos
+    if not all(key in data for key in ['nombre_insumo', 'unidad_medida', 'costo_unitario']):
+        return jsonify({'error': 'Faltan campos requeridos'}), 400
+    
+    # Convertir costo_unitario a float
+    try:
+        costo_unitario = float(data['costo_unitario'])
+    except (ValueError, TypeError):
+        return jsonify({'error': 'El costo unitario debe ser un número válido'}), 400
+    
+    # Manejar id_proveedor (puede ser None si no se proporciona)
+    id_proveedor = data.get('id_proveedor')
+    if id_proveedor == '' or id_proveedor is None:
+        id_proveedor = None
+    else:
+        try:
+            id_proveedor = int(id_proveedor)
+        except (ValueError, TypeError):
+            return jsonify({'error': 'El ID del proveedor debe ser un número válido'}), 400
+    
     query = """
         UPDATE Insumos 
         SET nombre_insumo = %s, unidad_medida = %s, costo_unitario = %s, id_proveedor = %s
@@ -54,8 +94,8 @@ def actualizar_insumo(id_insumo):
     cursor.execute(query, (
         data['nombre_insumo'],
         data['unidad_medida'],
-        data['costo_unitario'],
-        data.get('id_proveedor'),
+        costo_unitario,
+        id_proveedor,
         id_insumo
     ))
     conn.commit()

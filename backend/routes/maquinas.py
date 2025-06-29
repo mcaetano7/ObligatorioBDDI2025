@@ -117,3 +117,27 @@ def maquinas_en_alquiler():
     cursor.close()
     conn.close()
     return jsonify(data)
+
+@maquinas_bp.route('/alquileres-activos', methods=['GET'])
+def alquileres_activos():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    query = """
+        SELECT 
+            a.id_alquiler,
+            a.fecha_inicio,
+            a.fecha_fin,
+            m.modelo,
+            m.marca,
+            c.nombre_empresa,
+            c.direccion
+        FROM Alquileres a
+        JOIN Maquinas m ON a.id_maquina = m.id_maquina
+        JOIN Clientes c ON a.id_cliente = c.id_cliente
+        ORDER BY a.fecha_inicio DESC
+    """
+    cursor.execute(query)
+    data = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(data)

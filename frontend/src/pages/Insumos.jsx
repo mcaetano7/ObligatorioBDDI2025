@@ -35,11 +35,16 @@ const Insumos = () => {
         },
         body: JSON.stringify(form),
       });
-      if (!res.ok) throw new Error('Error al crear insumo');
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Error al crear insumo');
+      }
+      
       setForm({ nombre_insumo: '', unidad_medida: '', costo_unitario: '', id_proveedor: '' });
       fetchInsumos();
     } catch (err) {
-      setError('Error al crear insumo');
+      setError(err.message || 'Error al crear insumo');
     }
   };
 
@@ -63,12 +68,17 @@ const Insumos = () => {
         },
         body: JSON.stringify(form),
       });
-      if (!res.ok) throw new Error('Error al actualizar insumo');
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Error al actualizar insumo');
+      }
+      
       setEditId(null);
       setForm({ nombre_insumo: '', unidad_medida: '', costo_unitario: '', id_proveedor: '' });
       fetchInsumos();
     } catch (err) {
-      setError('Error al actualizar insumo');
+      setError(err.message || 'Error al actualizar insumo');
     }
   };
 
@@ -99,8 +109,8 @@ const Insumos = () => {
                 <form onSubmit={handleUpdate} style={{display:'inline'}}>
                   <input name="nombre_insumo" value={form.nombre_insumo} onChange={handleChange} required />
                   <input name="unidad_medida" value={form.unidad_medida} onChange={handleChange} required />
-                  <input name="costo_unitario" value={form.costo_unitario} onChange={handleChange} required />
-                  <input name="id_proveedor" value={form.id_proveedor} onChange={handleChange} />
+                  <input name="costo_unitario" type="number" step="0.01" value={form.costo_unitario} onChange={handleChange} required />
+                  <input name="id_proveedor" type="number" value={form.id_proveedor} onChange={handleChange} />
                   <button type="submit">Guardar</button>
                   <button type="button" onClick={()=>setEditId(null)}>Cancelar</button>
                 </form>
@@ -119,8 +129,8 @@ const Insumos = () => {
       <form onSubmit={handleSubmit}>
         <input name="nombre_insumo" placeholder="Nombre insumo" value={form.nombre_insumo} onChange={handleChange} required />
         <input name="unidad_medida" placeholder="Unidad" value={form.unidad_medida} onChange={handleChange} required />
-        <input name="costo_unitario" placeholder="Costo unitario" value={form.costo_unitario} onChange={handleChange} required />
-        <input name="id_proveedor" placeholder="ID proveedor (opcional)" value={form.id_proveedor} onChange={handleChange} />
+        <input name="costo_unitario" type="number" step="0.01" placeholder="Costo unitario" value={form.costo_unitario} onChange={handleChange} required />
+        <input name="id_proveedor" type="number" placeholder="ID proveedor (opcional)" value={form.id_proveedor} onChange={handleChange} />
         <button type="submit">Agregar</button>
       </form>
     </div>

@@ -48,7 +48,9 @@ INSERT INTO Tecnicos (nombre_tecnico, telefono, email) VALUES
 INSERT INTO Alquileres (id_maquina, id_cliente, fecha_inicio, fecha_fin, ganancias_maquina_total, coste_total_alquiler) VALUES 
 (1, 1, '2024-01-01', '2024-12-31', 50000.00, 180000.00),
 (2, 2, '2024-02-01', '2024-11-30', 45000.00, 200000.00),
-(3, 3, '2024-03-01', '2024-10-31', 30000.00, 96000.00);
+(3, 3, '2024-03-01', '2024-10-31', 30000.00, 96000.00),
+(4, 1, '2025-01-01', '2025-12-31', 0.00, 0.00),
+(1, 2, '2025-02-01', '2025-11-30', 0.00, 0.00);
 
 -- Insertar ganancias de máquinas
 INSERT INTO GananciasMaquina (id_alquiler, mes, anio, ganancia_cliente, ganancia_empresa, total_ventas) VALUES 

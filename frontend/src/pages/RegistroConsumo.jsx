@@ -7,6 +7,9 @@ const RegistroConsumo = () => {
   const [insumos, setInsumos] = useState([]);
   const [alquileres, setAlquileres] = useState([]);
 
+  // Obtener información del alquiler seleccionado
+  const alquilerSeleccionado = alquileres.find(a => a.id_alquiler == form.id_alquiler);
+
   const fetchInsumos = async () => {
     try {
       const res = await fetch('http://localhost:5000/insumos/');
@@ -21,10 +24,14 @@ const RegistroConsumo = () => {
 
   const fetchAlquileres = async () => {
     try {
-      const res = await fetch('http://localhost:5000/maquinas/en-alquiler');
+      const res = await fetch('http://localhost:5000/maquinas/alquileres-activos');
+      console.log('Respuesta del servidor:', res.status, res.ok);
       if (res.ok) {
         const data = await res.json();
+        console.log('Datos de alquileres:', data);
         setAlquileres(data);
+      } else {
+        console.error('Error en la respuesta:', res.status, res.statusText);
       }
     } catch (err) {
       console.error('Error cargando alquileres:', err);
@@ -32,11 +39,17 @@ const RegistroConsumo = () => {
   };
 
   useEffect(() => {
+    console.log('Componente RegistroConsumo montado');
     fetchInsumos();
     fetchAlquileres();
   }, []);
 
+  useEffect(() => {
+    console.log('Estado de alquileres actualizado:', alquileres);
+  }, [alquileres]);
+
   const handleChange = (e) => {
+    console.log('Campo cambiado:', e.target.name, 'Valor:', e.target.value);
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -81,10 +94,19 @@ const RegistroConsumo = () => {
             <option value="">Seleccionar alquiler</option>
             {alquileres.map(alquiler => (
               <option key={alquiler.id_alquiler} value={alquiler.id_alquiler}>
-                {alquiler.nombre_empresa} - {alquiler.modelo} {alquiler.marca}
+                {alquiler.nombre_empresa} - {alquiler.modelo} {alquiler.marca} (ID: {alquiler.id_alquiler})
               </option>
             ))}
           </select>
+          {alquilerSeleccionado && (
+            <div style={{marginTop: '10px', padding: '10px', backgroundColor: '#f0f0f0', borderRadius: '4px'}}>
+              <strong>Detalles del alquiler:</strong><br/>
+              Cliente: {alquilerSeleccionado.nombre_empresa}<br/>
+              Máquina: {alquilerSeleccionado.modelo} {alquilerSeleccionado.marca}<br/>
+              Fecha inicio: {alquilerSeleccionado.fecha_inicio}<br/>
+              Fecha fin: {alquilerSeleccionado.fecha_fin}
+            </div>
+          )}
         </div>
         
         <div>
