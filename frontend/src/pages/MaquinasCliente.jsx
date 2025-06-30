@@ -16,11 +16,7 @@ const MaquinasCliente = () => {
   useEffect(() => {
     const fetchData = async () => {
       const clienteRes = await axios.get(`http://localhost:5000/cliente/id-cliente/${user.id_usuario}`);
-      console.log("Respuesta de /id-cliente:", clienteRes.data);
-      const id = clienteRes.data.id_cliente;
       setIdCliente(clienteRes.data.id_cliente);
-      console.log("ID CLEINTE:", id);
-
       const res = await axios.get('http://localhost:5000/cliente/maquinas/disponibles');
       setMaquinas(res.data);
     };
@@ -33,12 +29,6 @@ const MaquinasCliente = () => {
     if (!fecha_inicio || !fecha_fin) return;
 
     try {
-      console.log({
-        id_cliente: idCliente,
-        id_maquina,
-        fecha_inicio,
-        fecha_fin
-      });
 
       await axios.post('http://localhost:5000/cliente/alquileres', {
         id_cliente: idCliente,

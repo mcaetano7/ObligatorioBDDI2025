@@ -111,3 +111,21 @@ def ganancias_por_maquina(id_cliente):
     cursor.close()
     conn.close()
     return jsonify(data)
+
+@cliente_bp.route('/ganancias-totales/<int:id_cliente>', methods=['GET'])
+def total_ganancias_cliente(id_cliente):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    query = """
+        SELECT SUM(gm.ganancia_cliente) AS total_ganancia
+        FROM GananciasMaquina gm
+        JOIN Alquileres a ON gm.id_alquiler = a.id_alquiler
+        WHERE a.id_cliente = %s
+    """
+    cursor.execute(query, (id_cliente,))
+    result = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    return jsonify({'total_ganancia': result['total_ganancia'] or 0})
