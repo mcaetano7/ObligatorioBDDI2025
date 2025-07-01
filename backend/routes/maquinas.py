@@ -78,8 +78,17 @@ def actualizar_maquina(id_maquina):
 def eliminar_maquina(id_maquina):
     conn = get_connection()
     cursor = conn.cursor()
+
+    # Verificar si la máquina tiene alquileres asociados
+    cursor.execute("SELECT COUNT(*) as count FROM Alquileres WHERE id_maquina = %s", (id_maquina,))
+    result = cursor.fetchone()
+    if result[0] > 0:
+        cursor.close()
+        conn.close()
+        return jsonify({'error': 'No se puede eliminar una máquina que esta alquilada'}), 400
+
     cursor.execute("DELETE FROM Maquinas WHERE id_maquina = %s", (id_maquina,))
     conn.commit()
     cursor.close()
     conn.close()
-    return jsonify({'mensaje': 'Máquina eliminada correctamente'}), 200
+    return jsonify({'mensaje': 'Máquina eliminada correctamente'})

@@ -11,9 +11,9 @@ import MaquinasAdmin from './pages/MaquinasAdmin';
 import TecnicosAdmin from './pages/TecnicosAdmin';
 import MantenimientosAdmin from './pages/MantenimientosAdmin';
 import MaquinasPorCliente from './pages/MaquinasPorCliente';
-import GananciasAdmin from './pages/GananciasAdmin';
-import CostesAdmin from './pages/CostesAdmin';
-import RendimientoAdmin from './pages/RendimientoAdmin';
+import CostesYRendimientoAdmin from './pages/CostesYRendimientoAdmin';
+import ClientesAdmin from './pages/ClientesAdmin';
+import InsumosAdmin from './pages/InsumosAdmin';
 
 function App() {
   return (
@@ -35,12 +35,14 @@ function App() {
         <Route path="/admin/tecnicos" element={<TecnicosAdmin />} />
         <Route path="/admin/mantenimientos" element={<MantenimientosAdmin />} />
         <Route path="/admin/maquinas-cliente" element={<MaquinasPorCliente />} />
-        <Route path="/admin/ganancias" element={<GananciasAdmin />} />
-        <Route path="/admin/costes" element={<CostesAdmin />} />
-        <Route path="/admin/rendimiento" element={<RendimientoAdmin />} />
+        <Route path="/admin/ganancias" element={<CostesYRendimientoAdmin />} />
+        <Route path="/admin/clientes" element={<ClientesAdmin />}/>
+        <Route path="/admin/insumos" element={<InsumosAdmin />}/>
       </Route>
     </Routes>
   );
 }
 
 export default App;
+
+/* */

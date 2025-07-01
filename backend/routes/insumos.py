@@ -190,4 +190,21 @@ def reporte_consumo():
     data = cursor.fetchall()
     cursor.close()
     conn.close()
-    return jsonify(data) 
+    return jsonify(data)
+
+@insumos_bp.route('/consumo/<int:id_consumo>', methods=['DELETE'])
+def eliminar_consumo(id_consumo):
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM ConsumoInsumos WHERE id_consumo = %s", (id_consumo,))
+        if cursor.rowcount == 0:
+            return jsonify({'error': 'Consumo no encontrado'}), 404
+        conn.commit()
+        return jsonify({'mensaje': 'Consumo eliminado correctamente'})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 400
+    finally:
+        cursor.close()
+        conn.close()

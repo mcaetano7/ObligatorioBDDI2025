@@ -3,10 +3,11 @@ import axios from 'axios';
 
 const TecnicosAdmin = () => {
   const [tecnicos, setTecnicos] = useState([]);
-  const [nuevo, setNuevo] = useState({ nombre: '', especialidad: '' });
+  const [form, setForm] = useState({ nombre_tecnico: '', telefono: '', email: '' });
+  const [editandoId, setEditandoId] = useState(null);
 
   const fetchTecnicos = async () => {
-    const res = await axios.get('http://localhost:5000/tecnicos');
+    const res = await axios.get('http://localhost:5000/tecnicos/');
     setTecnicos(res.data);
   };
 
@@ -14,53 +15,77 @@ const TecnicosAdmin = () => {
     fetchTecnicos();
   }, []);
 
-  const agregarTecnico = async () => {
-    if (!nuevo.nombre || !nuevo.especialidad) return alert('Faltan campos');
-    await axios.post('http://localhost:5000/tecnicos', nuevo);
-    setNuevo({ nombre: '', especialidad: '' });
-    fetchTecnicos();
+  const handleChange = e => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const eliminarTecnico = async (id) => {
+  const handleSubmit = async e => {
+    e.preventDefault();
+    try {
+      if (editandoId) {
+        await axios.put(`http://localhost:5000/tecnicos/${editandoId}`, form);
+      } else {
+        await axios.post('http://localhost:5000/tecnicos/', form);
+      }
+      setForm({ nombre_tecnico: '', telefono: '', email: '' });
+      setEditandoId(null);
+      fetchTecnicos();
+    // eslint-disable-next-line no-unused-vars
+    } catch (err) {
+      alert('Error al guardar técnico');
+    }
+  };
+
+  const handleEditar = tecnico => {
+    setForm({
+      nombre_tecnico: tecnico.nombre_tecnico,
+      telefono: tecnico.telefono,
+      email: tecnico.email
+    });
+    setEditandoId(tecnico.id_tecnico);
+  };
+
+  const handleEliminar = async id => {
     if (!window.confirm('¿Eliminar técnico?')) return;
-    await axios.delete(`http://localhost:5000/tecnicos/${id}`);
-    fetchTecnicos();
-  };
-
-  const editarTecnico = async (id) => {
-    const nombre = prompt('Nuevo nombre:');
-    const especialidad = prompt('Nueva especialidad:');
-    if (!nombre || !especialidad) return;
-    await axios.put(`http://localhost:5000/tecnicos/${id}`, { nombre, especialidad });
-    fetchTecnicos();
+    try {
+      await axios.delete(`http://localhost:5000/tecnicos/${id}`);
+      fetchTecnicos();
+    } catch (err) {
+      alert(err?.response?.data?.error || 'Error al eliminar técnico');
+    }
   };
 
   return (
     <div style={{ padding: 20 }}>
       <h2>Gestión de Técnicos</h2>
-
-      <div style={{ marginBottom: 20 }}>
+      <form onSubmit={handleSubmit} style={{ marginBottom: 20 }}>
         <input
-          type="text"
+          name="nombre_tecnico"
           placeholder="Nombre"
-          value={nuevo.nombre}
-          onChange={e => setNuevo({ ...nuevo, nombre: e.target.value })}
+          value={form.nombre_tecnico}
+          onChange={handleChange}
+          required
         />
         <input
-          type="text"
-          placeholder="Especialidad"
-          value={nuevo.especialidad}
-          onChange={e => setNuevo({ ...nuevo, especialidad: e.target.value })}
+          name="telefono"
+          placeholder="Teléfono"
+          value={form.telefono}
+          onChange={handleChange}
         />
-        <button onClick={agregarTecnico}>Agregar</button>
-      </div>
-
+        <input
+          name="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={handleChange}
+        />
+        <button type="submit">{editandoId ? 'Actualizar' : 'Agregar'}</button>
+      </form>
       <ul>
         {tecnicos.map(t => (
           <li key={t.id_tecnico}>
-            <b>{t.nombre}</b> — {t.especialidad}
-            <button onClick={() => editarTecnico(t.id_tecnico)}>Editar</button>
-            <button onClick={() => eliminarTecnico(t.id_tecnico)}>Eliminar</button>
+            <b>{t.nombre_tecnico}</b> — {t.telefono || 'Sin teléfono'} — {t.email || 'Sin email'} — {t.cantidad_mantenimientos} mantenimientos
+            <button onClick={() => handleEditar(t)}>Editar</button>
+            <button onClick={() => handleEliminar(t.id_tecnico)}>Eliminar</button>
           </li>
         ))}
       </ul>

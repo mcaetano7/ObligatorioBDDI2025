@@ -11,8 +11,8 @@ const DashboardAdmin = () => {
     { label: 'Solicitudes de mantenimiento', path: '/admin/mantenimientos' },
     { label: 'Máquinas por cliente', path: '/admin/maquinas-cliente' },
     { label: 'Ganancias', path: '/admin/ganancias' },
-    { label: 'Costes mensuales', path: '/admin/costes' },
-    { label: 'Rendimiento de máquinas', path: '/admin/rendimiento' },
+    { label: 'Gestion de clientes', path: '/admin/clientes' },
+    { label: 'Gestion de insumos', path: '/admin/insumos' },
   ];
 
   return (

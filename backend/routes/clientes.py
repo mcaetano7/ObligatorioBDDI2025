@@ -129,3 +129,127 @@ def total_ganancias_cliente(id_cliente):
     conn.close()
 
     return jsonify({'total_ganancia': result['total_ganancia'] or 0})
+
+@cliente_bp.route('/', methods=['GET'])
+def obtener_clientes():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM Clientes")
+    clientes = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(clientes)
+
+# Crear nuevo cliente
+@cliente_bp.route('/', methods=['POST'])
+def crear_cliente():
+    data = request.get_json()
+    rut = data.get('rut')
+    nombre_empresa = data.get('nombre_empresa')
+    direccion = data.get('direccion')
+    telefono = data.get('telefono')
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "INSERT INTO Clientes (rut, nombre_empresa, direccion, telefono) VALUES (%s, %s, %s, %s)",
+            (rut, nombre_empresa, direccion, telefono)
+        )
+        conn.commit()
+        return jsonify({'mensaje': 'Cliente creado correctamente'}), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 400
+    finally:
+        cursor.close()
+        conn.close()
+
+# Actualizar cliente existente
+@cliente_bp.route('/<int:id_cliente>', methods=['PUT'])
+def actualizar_cliente(id_cliente):
+    data = request.get_json()
+    rut = data.get('rut')
+    nombre_empresa = data.get('nombre_empresa')
+    direccion = data.get('direccion')
+    telefono = data.get('telefono')
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            UPDATE Clientes
+            SET rut = %s, nombre_empresa = %s, direccion = %s, telefono = %s
+            WHERE id_cliente = %s
+        """, (rut, nombre_empresa, direccion, telefono, id_cliente))
+        conn.commit()
+        return jsonify({'mensaje': 'Cliente actualizado correctamente'})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 400
+    finally:
+        cursor.close()
+        conn.close()
+
+# Eliminar cliente
+@cliente_bp.route('/<int:id_cliente>', methods=['DELETE'])
+def eliminar_cliente(id_cliente):
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM Clientes WHERE id_cliente = %s", (id_cliente,))
+        if cursor.rowcount == 0:
+            return jsonify({'error': 'Cliente no encontrado'}), 404
+        conn.commit()
+        return jsonify({'mensaje': 'Cliente eliminado correctamente'})
+    except Exception as e:
+        conn.rollback()
+        error_msg = str(e)
+        if 'foreign key constraint' in error_msg.lower():
+            return jsonify({'error': 'No se puede eliminar un cliente que tiene alquileres'}), 400
+        return jsonify({'error': error_msg}), 400
+    finally:
+        cursor.close()
+        conn.close()
+
+@cliente_bp.route('/alquiler-detalle/<int:id_alquiler>', methods=['GET'])
+def detalle_alquiler(id_alquiler):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Info de la máquina
+    cursor.execute("""
+        SELECT 
+            a.fecha_inicio,
+            a.fecha_fin,
+            a.coste_total_alquiler,
+            m.modelo,
+            m.marca
+        FROM Alquileres a
+        JOIN Maquinas m ON a.id_maquina = m.id_maquina
+        WHERE a.id_alquiler = %s
+    """, (id_alquiler,))
+    info = cursor.fetchone()
+
+    # Insumos consumidos
+    cursor.execute("""
+        SELECT 
+            ci.id_consumo,
+            i.nombre_insumo,
+            ci.cantidad_consumida,
+            ci.fecha_consumo,
+            i.unidad_medida
+        FROM ConsumoInsumos ci
+        JOIN Insumos i ON ci.id_insumo = i.id_insumo
+        WHERE ci.id_alquiler = %s
+        ORDER BY ci.fecha_consumo DESC
+    """, (id_alquiler,))
+    insumos = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return jsonify({
+        "info": info,
+        "insumos": insumos
+    })

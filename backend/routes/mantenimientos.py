@@ -107,10 +107,15 @@ def completar_mantenimiento(id_solicitud):
     
     query = """
         UPDATE SolicitudesMantenimiento 
-        SET fecha_resolucion = CURDATE()
+        SET fecha_resolucion = NOW()
         WHERE id_solicitud = %s
     """
     cursor.execute(query, (id_solicitud,))
+    
+    if cursor.rowcount == 0:
+        conn.rollback()
+        return jsonify({'error': 'Solicitud no encontrada'}), 404
+
     conn.commit()
     cursor.close()
     conn.close()
@@ -122,7 +127,10 @@ def mantenimientos_pendientes():
     cursor = conn.cursor(dictionary=True)
     query = """
         SELECT 
-            sm.*,
+            sm.id_solicitud,
+            sm.descripcion,
+            sm.fecha_solicitud,
+            sm.id_alquiler,
             c.nombre_empresa,
             m.modelo,
             m.marca

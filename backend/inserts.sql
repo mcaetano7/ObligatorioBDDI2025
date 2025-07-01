@@ -66,7 +66,7 @@ INSERT INTO GananciasMaquina (
 ) VALUES
 (1, 5, 2024, 5000.00, 1000.00, 6000.00),
 (2, 5, 2024, 7000.00, 1400.00, 8400.00);
-
+ 
 INSERT INTO ConsumoInsumos (
     id_alquiler, id_insumo, cantidad_consumida, fecha_consumo
 ) VALUES

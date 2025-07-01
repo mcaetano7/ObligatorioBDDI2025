@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const MaquinasAdmin = () => {
   const [maquinas, setMaquinas] = useState([]);
-  const [nueva, setNueva] = useState({
+  const [form, setForm] = useState({
     modelo: '',
     marca: '',
     capacidad_cafe: '',
@@ -11,6 +11,7 @@ const MaquinasAdmin = () => {
     costo_mensual_alquiler: '',
     porcentaje_ganancia_empresa: ''
   });
+  const [editandoId, setEditandoId] = useState(null);
 
   const fetchMaquinas = async () => {
     const res = await axios.get('http://localhost:5000/maquinas');
@@ -21,55 +22,85 @@ const MaquinasAdmin = () => {
     fetchMaquinas();
   }, []);
 
-  const agregarMaquina = async () => {
-    await axios.post('http://localhost:5000/maquinas', nueva);
-    setNueva({ modelo: '', marca: '', capacidad_cafe: '', capacidad_agua: '', costo_mensual_alquiler: '', porcentaje_ganancia_empresa: '' });
-    fetchMaquinas();
+  const handleChange = e => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const eliminarMaquina = async (id) => {
-    if (!window.confirm('¿Eliminar esta máquina?')) return;
-    await axios.delete(`http://localhost:5000/maquinas/${id}`);
-    fetchMaquinas();
+  const handleSubmit = async e => {
+    e.preventDefault();
+    const payload = {
+      ...form,
+      capacidad_cafe: parseFloat(form.capacidad_cafe),
+      capacidad_agua: parseFloat(form.capacidad_agua),
+      costo_mensual_alquiler: parseFloat(form.costo_mensual_alquiler),
+      porcentaje_ganancia_empresa: parseFloat(form.porcentaje_ganancia_empresa)
+    };
+    try {
+      if (editandoId) {
+        await axios.put(`http://localhost:5000/maquinas/${editandoId}`, payload);
+      } else {
+        await axios.post('http://localhost:5000/maquinas', payload);
+      }
+      setForm({
+        modelo: '',
+        marca: '',
+        capacidad_cafe: '',
+        capacidad_agua: '',
+        costo_mensual_alquiler: '',
+        porcentaje_ganancia_empresa: ''
+      });
+      setEditandoId(null);
+      fetchMaquinas();
+    // eslint-disable-next-line no-unused-vars
+    } catch (err) {
+      alert('Error al guardar la máquina');
+    }
   };
 
-  const editarMaquina = async (id) => {
-    const datos = prompt('Introduce los nuevos datos separados por coma (modelo,marca,cafe,agua,costo,porcentaje)');
-    if (!datos) return;
-    const [modelo, marca, cafe, agua, costo, porcentaje] = datos.split(',');
-    await axios.put(`http://localhost:5000/maquinas/${id}`, {
-      modelo, marca,
-      capacidad_cafe: parseInt(cafe),
-      capacidad_agua: parseInt(agua),
-      costo_mensual_alquiler: parseFloat(costo),
-      porcentaje_ganancia_empresa: parseFloat(porcentaje)
+  const handleEditar = maquina => {
+    setForm({
+      modelo: maquina.modelo,
+      marca: maquina.marca,
+      capacidad_cafe: maquina.capacidad_cafe,
+      capacidad_agua: maquina.capacidad_agua,
+      costo_mensual_alquiler: maquina.costo_mensual_alquiler,
+      porcentaje_ganancia_empresa: maquina.porcentaje_ganancia_empresa
     });
-    fetchMaquinas();
+    setEditandoId(maquina.id_maquina);
+  };
+
+  const handleEliminar = async id => {
+    if (!window.confirm('¿Eliminar esta máquina?')) return;
+    try {
+      await axios.delete(`http://localhost:5000/maquinas/${id}`);
+      fetchMaquinas();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Error al eliminar la máquina');
+    }
   };
 
   return (
     <div style={{ padding: 20 }}>
       <h2>Gestión de Máquinas</h2>
-
-      <div style={{ marginBottom: 20 }}>
+      <form onSubmit={handleSubmit} style={{ marginBottom: 20 }}>
         {['modelo', 'marca', 'capacidad_cafe', 'capacidad_agua', 'costo_mensual_alquiler', 'porcentaje_ganancia_empresa'].map(field => (
           <input
             key={field}
-            type="text"
+            name={field}
             placeholder={field.replace(/_/g, ' ')}
-            value={nueva[field]}
-            onChange={e => setNueva({ ...nueva, [field]: e.target.value })}
+            value={form[field]}
+            onChange={handleChange}
+            required
           />
         ))}
-        <button onClick={agregarMaquina}>Agregar</button>
-      </div>
-
+        <button type="submit">{editandoId ? 'Actualizar' : 'Agregar'}</button>
+      </form>
       <ul>
         {maquinas.map(m => (
           <li key={m.id_maquina}>
             <b>{m.marca} {m.modelo}</b> - Café: {m.capacidad_cafe}g / Agua: {m.capacidad_agua}ml - ${m.costo_mensual_alquiler} / {m.porcentaje_ganancia_empresa}%
-            <button onClick={() => editarMaquina(m.id_maquina)}>Editar</button>
-            <button onClick={() => eliminarMaquina(m.id_maquina)}>Eliminar</button>
+            <button onClick={() => handleEditar(m)}>Editar</button>
+            <button onClick={() => handleEliminar(m.id_maquina)}>Eliminar</button>
           </li>
         ))}
       </ul>

@@ -183,3 +183,109 @@ def resumen_mensual():
     cursor.close()
     conn.close()
     return jsonify(data) 
+
+@reportes_bp.route('/maquinas-por-cliente', methods=['GET'])
+def maquinas_por_cliente():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT 
+            a.id_alquiler,
+            a.fecha_inicio,
+            a.fecha_fin,
+            a.coste_total_alquiler,
+            m.id_maquina,
+            m.modelo,
+            m.marca,
+            c.nombre_empresa AS nombre_cliente,
+            'Ubicación X' AS ubicacion, -- Si tenés una tabla de ubicaciones real, reemplazalo
+            IFNULL(SUM(g.ganancia_empresa), 0) AS ganancia_empresa
+        FROM Alquileres a
+        JOIN Maquinas m ON a.id_maquina = m.id_maquina
+        JOIN Clientes c ON a.id_cliente = c.id_cliente
+        LEFT JOIN GananciasMaquina g ON a.id_alquiler = g.id_alquiler
+        GROUP BY a.id_alquiler
+    """)
+    resultados = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(resultados)
+
+@reportes_bp.route('/ganancias-por-alquiler')
+def ganancias_por_alquiler():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    query = """
+        SELECT 
+            a.id_alquiler,
+            c.nombre_empresa AS cliente,
+            m.costo_mensual_alquiler,
+            IFNULL(SUM(g.ganancia_empresa), 0) AS ganancia_empresa
+        FROM Alquileres a
+        JOIN Clientes c ON a.id_cliente = c.id_cliente
+        JOIN Maquinas m ON a.id_maquina = m.id_maquina
+        LEFT JOIN GananciasMaquina g ON a.id_alquiler = g.id_alquiler
+        GROUP BY a.id_alquiler, c.nombre_empresa, m.costo_mensual_alquiler
+    """
+    
+    cursor.execute(query)
+    data = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
+    
+    return jsonify(data)
+
+
+@reportes_bp.route('/rendimiento-maquinas', methods=['GET'])
+def rendimiento_maquinas():
+    mes = request.args.get('mes')
+    anio = request.args.get('anio')
+
+    condiciones = []
+    valores = []
+
+    if mes and anio:
+        condiciones.append("gm.mes = %s")
+        valores.append(mes)
+        condiciones.append("gm.anio = %s")
+        valores.append(anio)
+        condiciones.append("MONTH(ci.fecha_consumo) = %s")
+        valores.append(mes)
+        condiciones.append("YEAR(ci.fecha_consumo) = %s")
+        valores.append(anio)
+
+    filtro_sql = ""
+    if condiciones:
+        filtro_sql = f"""
+            WHERE ({' AND '.join(condiciones[:2])})
+            OR ({' AND '.join(condiciones[2:])})
+        """
+
+    query = f"""
+        SELECT 
+            m.modelo,
+            m.marca,
+            IFNULL(SUM(gm.ganancia_empresa), 0) AS ganancia_total,
+            IFNULL(SUM(ci.cantidad_consumida * i.costo_unitario), 0) AS costo_insumos,
+            IFNULL(SUM(gm.ganancia_empresa), 0) - IFNULL(SUM(ci.cantidad_consumida * i.costo_unitario), 0) AS rendimiento
+        FROM Maquinas m
+        LEFT JOIN Alquileres a ON m.id_maquina = a.id_maquina
+        LEFT JOIN GananciasMaquina gm ON a.id_alquiler = gm.id_alquiler
+        LEFT JOIN ConsumoInsumos ci ON a.id_alquiler = ci.id_alquiler
+        LEFT JOIN Insumos i ON ci.id_insumo = i.id_insumo
+        {filtro_sql}
+        GROUP BY m.modelo, m.marca
+        ORDER BY rendimiento DESC
+    """
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(query, tuple(valores))
+    data = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    
+    return jsonify(data)

@@ -1,37 +1,109 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 const AlquilerElement = ({ alquiler }) => {
-  const [mostrarDetalles, setMostrarDetalles] = useState(false);
+  const [detalles, setDetalles] = useState(null);
+  const [insumosDisponibles, setInsumosDisponibles] = useState([]);
+  const [nuevoInsumo, setNuevoInsumo] = useState({
+    id_insumo: '',
+    cantidad_consumida: ''
+  });
 
-  const solicitarMantenimiento = async () => {
-    const descripcion = prompt("Describe el problema:");
-    if (!descripcion) return;
+  const fetchDetalles = async () => {
     try {
-      await axios.post('http://localhost:5000/cliente/solicitudes', {
-        id_alquiler: alquiler.id_alquiler,
-        descripcion
-      });
-      alert('Solicitud enviada correctamente');
-    // eslint-disable-next-line no-unused-vars
+      const res = await axios.get(`http://localhost:5000/cliente/alquiler-detalle/${alquiler.id_alquiler}`);
+      setDetalles(res.data);
     } catch (err) {
-      alert('Error al solicitar mantenimiento');
+      console.error('Error al obtener detalles del alquiler');
     }
   };
 
+  const fetchInsumos = async () => {
+    const res = await axios.get('http://localhost:5000/insumos/');
+    setInsumosDisponibles(res.data);
+  };
+
+  useEffect(() => {
+    fetchDetalles();
+    fetchInsumos();
+  }, []);
+
+  const handleAgregarInsumo = async e => {
+    e.preventDefault();
+    try {
+      await axios.post('http://localhost:5000/insumos/consumo', {
+        id_alquiler: alquiler.id_alquiler,
+        id_insumo: nuevoInsumo.id_insumo,
+        cantidad_consumida: parseFloat(nuevoInsumo.cantidad_consumida)
+      });
+      setNuevoInsumo({ id_insumo: '', cantidad_consumida: '' });
+      fetchDetalles(); // recargar lista
+    // eslint-disable-next-line no-unused-vars
+    } catch (err) {
+      alert('Error al agregar insumo');
+    }
+  };
+
+  const handleEliminarInsumo = async id_consumo => {
+    if (!window.confirm('¿Eliminar este insumo del alquiler?')) return;
+    try {
+      await axios.delete(`http://localhost:5000/insumos/consumo/${id_consumo}`);
+      fetchDetalles(); // recargar lista
+    // eslint-disable-next-line no-unused-vars
+    } catch (err) {
+      alert('Error al eliminar insumo');
+    }
+  };
+
+  if (!detalles) return <p>Cargando detalles...</p>;
+
   return (
-    <div style={{ border: '1px solid #ccc', margin: 10, padding: 10 }}>
-      <div onClick={() => setMostrarDetalles(!mostrarDetalles)}>
-        🧃 Máquina alquilada #{alquiler.id_maquina}
-      </div>
-      {mostrarDetalles && (
-        <div>
-          <p><b>Inicio:</b> {alquiler.fecha_inicio}</p>
-          <p><b>Fin:</b> {alquiler.fecha_fin}</p>
-          <p><b>Coste:</b> ${alquiler.coste_total_alquiler}</p>
-          <button onClick={solicitarMantenimiento}>Solicitar mantenimiento</button>
-        </div>
+    <div style={{ border: '1px solid gray', padding: 15, marginBottom: 15 }}>
+      <h3>Alquiler #{alquiler.id_alquiler}</h3>
+      <p><b>Inicio:</b> {detalles.info.fecha_inicio}</p>
+      <p><b>Fin:</b> {detalles.info.fecha_fin || 'En curso'}</p>
+      <p><b>Costo:</b> ${detalles.info.coste_total_alquiler}</p>
+      <p><b>Máquina:</b> {detalles.info.marca} – {detalles.info.modelo}</p>
+
+      <h4>Insumos utilizados</h4>
+      {detalles.insumos.length === 0 ? (
+        <p>No hay insumos registrados aún.</p>
+      ) : (
+        <ul>
+          {detalles.insumos.map((i, idx) => (
+            <li key={idx}>
+              {i.nombre_insumo} – {i.cantidad_consumida} {i.unidad_medida} ({i.fecha_consumo})
+              <button onClick={() => handleEliminarInsumo(i.id_consumo)}>Eliminar</button>
+            </li>
+          ))}
+        </ul>
       )}
+
+      <h4>Agregar insumo</h4>
+      <form onSubmit={handleAgregarInsumo}>
+        <select
+          required
+          value={nuevoInsumo.id_insumo}
+          onChange={e => setNuevoInsumo({ ...nuevoInsumo, id_insumo: e.target.value })}
+        >
+          <option value="">Seleccione un insumo</option>
+          {insumosDisponibles.map(i => (
+            <option key={i.id_insumo} value={i.id_insumo}>
+              {i.nombre_insumo} ({i.unidad_medida})
+            </option>
+          ))}
+        </select>
+        <input
+          type="number"
+          placeholder="Cantidad"
+          required
+          value={nuevoInsumo.cantidad_consumida}
+          onChange={e => setNuevoInsumo({ ...nuevoInsumo, cantidad_consumida: e.target.value })}
+          min="0.01"
+          step="0.01"
+        />
+        <button type="submit">Agregar</button>
+      </form>
     </div>
   );
 };

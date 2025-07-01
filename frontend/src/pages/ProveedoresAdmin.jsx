@@ -3,64 +3,101 @@ import axios from 'axios';
 
 const ProveedoresAdmin = () => {
   const [proveedores, setProveedores] = useState([]);
-  const [nuevo, setNuevo] = useState({ nombre: '', contacto: '' });
-
-  const fetchProveedores = async () => {
-    const res = await axios.get('http://localhost:5000/proveedores');
-    setProveedores(res.data);
-  };
+  const [form, setForm] = useState({
+    nombre_proveedor: '',
+    telefono: '',
+    email: '',
+    direccion: ''
+  });
+  const [editandoId, setEditandoId] = useState(null);
 
   useEffect(() => {
     fetchProveedores();
   }, []);
 
-  const agregarProveedor = async () => {
-    if (!nuevo.nombre || !nuevo.contacto) return alert('Faltan campos');
-    await axios.post('http://localhost:5000/proveedores', nuevo);
-    setNuevo({ nombre: '', contacto: '' });
-    fetchProveedores();
+  const fetchProveedores = async () => {
+    const res = await axios.get('http://localhost:5000/proveedores/');
+    setProveedores(res.data);
   };
 
-  const eliminarProveedor = async (id) => {
-    if (!window.confirm('¿Eliminar proveedor?')) return;
-    await axios.delete(`http://localhost:5000/proveedores/${id}`);
-    fetchProveedores();
+  const handleChange = e => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const editarProveedor = async (id) => {
-    const nombre = prompt('Nuevo nombre:');
-    const contacto = prompt('Nuevo contacto:');
-    if (!nombre || !contacto) return;
-    await axios.put(`http://localhost:5000/proveedores/${id}`, { nombre, contacto });
-    fetchProveedores();
+  const handleSubmit = async e => {
+    e.preventDefault();
+    try {
+      if (editandoId) {
+        await axios.put(`http://localhost:5000/proveedores/${editandoId}`, form);
+      } else {
+        await axios.post('http://localhost:5000/proveedores/', form);
+      }
+      setForm({ nombre_proveedor: '', telefono: '', email: '', direccion: '' });
+      setEditandoId(null);
+      fetchProveedores();
+    // eslint-disable-next-line no-unused-vars
+    } catch (err) {
+      alert('Error al guardar el proveedor');
+    }
+  };
+
+  const handleEditar = prov => {
+    setForm({
+      nombre_proveedor: prov.nombre_proveedor,
+      telefono: prov.telefono,
+      email: prov.email,
+      direccion: prov.direccion
+    });
+    setEditandoId(prov.id_proveedor);
+  };
+
+  const handleEliminar = async id => {
+    try {
+      await axios.delete(`http://localhost:5000/proveedores/${id}`);
+      fetchProveedores();
+    // eslint-disable-next-line no-unused-vars
+    } catch (err) {
+      alert('No se puede eliminar este proveedor. Puede estar vinculado a otros registros.');
+    }
   };
 
   return (
     <div style={{ padding: 20 }}>
       <h2>Gestión de Proveedores</h2>
-
-      <div style={{ marginBottom: 20 }}>
+      <form onSubmit={handleSubmit} style={{ marginBottom: 20 }}>
         <input
-          type="text"
+          name="nombre_proveedor"
           placeholder="Nombre"
-          value={nuevo.nombre}
-          onChange={e => setNuevo({ ...nuevo, nombre: e.target.value })}
+          value={form.nombre_proveedor}
+          onChange={handleChange}
+          required
         />
         <input
-          type="text"
-          placeholder="Contacto"
-          value={nuevo.contacto}
-          onChange={e => setNuevo({ ...nuevo, contacto: e.target.value })}
+          name="telefono"
+          placeholder="Teléfono"
+          value={form.telefono}
+          onChange={handleChange}
         />
-        <button onClick={agregarProveedor}>Agregar</button>
-      </div>
-
+        <input
+          name="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={handleChange}
+        />
+        <input
+          name="direccion"
+          placeholder="Dirección"
+          value={form.direccion}
+          onChange={handleChange}
+        />
+        <button type="submit">{editandoId ? 'Actualizar' : 'Crear'}</button>
+      </form>
       <ul>
-        {proveedores.map(p => (
-          <li key={p.id_proveedor}>
-            <b>{p.nombre}</b> — {p.contacto}
-            <button onClick={() => editarProveedor(p.id_proveedor)}>Editar</button>
-            <button onClick={() => eliminarProveedor(p.id_proveedor)}>Eliminar</button>
+        {proveedores.map(prov => (
+          <li key={prov.id_proveedor}>
+            <b>{prov.nombre_proveedor}</b> | Tel: {prov.telefono} | Email: {prov.email} | Dir: {prov.direccion}
+            <button onClick={() => handleEditar(prov)}>Editar</button>
+            <button onClick={() => handleEliminar(prov.id_proveedor)}>Eliminar</button>
           </li>
         ))}
       </ul>
