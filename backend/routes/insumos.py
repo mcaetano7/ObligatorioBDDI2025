@@ -19,6 +19,7 @@ def listar_insumos():
     conn.close()
     return jsonify(resultados)
 
+@insumos_bp.route('', methods=['POST'])
 @insumos_bp.route('/', methods=['POST'])
 def crear_insumo():
     data = request.json

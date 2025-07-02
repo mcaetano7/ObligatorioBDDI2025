@@ -86,6 +86,19 @@ def asignar_tecnico():
     conn = get_connection()
     cursor = conn.cursor()
     
+    # Verificar si el técnico ya está asignado a otra solicitud pendiente
+    cursor.execute("""
+        SELECT COUNT(*) as count 
+        FROM SolicitudesMantenimiento 
+        WHERE id_tecnico_asignado = %s AND fecha_resolucion IS NULL AND id_solicitud != %s
+    """, (data['id_tecnico'], data['id_solicitud']))
+    
+    result = cursor.fetchone()
+    if result[0] > 0:
+        cursor.close()
+        conn.close()
+        return jsonify({'error': 'El técnico ya está asignado a otra solicitud pendiente'}), 400
+    
     query = """
         UPDATE SolicitudesMantenimiento 
         SET id_tecnico_asignado = %s, fecha_asignacion = CURDATE()

@@ -10,6 +10,16 @@ def listar_maquinas():
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT * FROM Maquinas")
     resultados = cursor.fetchall()
+    # Por cada máquina, obtener los cafés que puede producir
+    for maquina in resultados:
+        cursor.execute('''
+            SELECT c.id_cafe, c.nombre_cafe, c.precio_venta, c.descripcion
+            FROM MaquinaCafes mc
+            JOIN Cafes c ON mc.id_cafe = c.id_cafe
+            WHERE mc.id_maquina = %s
+        ''', (maquina['id_maquina'],))
+        cafes = cursor.fetchall()
+        maquina['cafes'] = cafes
     cursor.close()
     conn.close()
     return jsonify(resultados)
@@ -37,10 +47,11 @@ def crear_maquina():
         data['porcentaje_ganancia_empresa']
     )
     cursor.execute(query, valores)
+    id_maquina = cursor.lastrowid
     conn.commit()
     cursor.close()
     conn.close()
-    return jsonify({'mensaje': 'Máquina creada correctamente'}), 201
+    return jsonify({'mensaje': 'Máquina creada correctamente', 'id_maquina': id_maquina}), 201
 
 # Editar máquina existente
 @maquinas_bp.route('/<int:id_maquina>', methods=['PUT'])
@@ -87,8 +98,71 @@ def eliminar_maquina(id_maquina):
         conn.close()
         return jsonify({'error': 'No se puede eliminar una máquina que esta alquilada'}), 400
 
+    # Eliminar registros de MaquinaCafes asociados a la máquina
+    cursor.execute("DELETE FROM MaquinaCafes WHERE id_maquina = %s", (id_maquina,))
+    
+    # Eliminar la máquina
     cursor.execute("DELETE FROM Maquinas WHERE id_maquina = %s", (id_maquina,))
     conn.commit()
     cursor.close()
     conn.close()
     return jsonify({'mensaje': 'Máquina eliminada correctamente'})
+
+# Obtener máquinas no alquiladas
+@maquinas_bp.route('/disponibles', methods=['GET'])
+def listar_maquinas_disponibles():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM Maquinas WHERE id_maquina NOT IN (SELECT id_maquina FROM Alquileres)")
+    resultados = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(resultados)
+
+# Obtener una máquina por su id
+@maquinas_bp.route('/<int:id_maquina>', methods=['GET'])
+def obtener_maquina(id_maquina):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM Maquinas WHERE id_maquina = %s", (id_maquina,))
+    maquina = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    if maquina:
+        return jsonify(maquina)
+    else:
+        return jsonify({'error': 'Máquina no encontrada'}), 404
+
+# Actualizar cafés de una máquina
+@maquinas_bp.route('/<int:id_maquina>/cafes', methods=['PUT'])
+def actualizar_cafes_maquina(id_maquina):
+    data = request.json
+    nuevos_cafes = data.get('cafes', [])
+    conn = get_connection()
+    cursor = conn.cursor()
+    # Eliminar cafés actuales
+    cursor.execute('DELETE FROM MaquinaCafes WHERE id_maquina = %s', (id_maquina,))
+    # Insertar los nuevos cafés
+    for id_cafe in nuevos_cafes:
+        cursor.execute('INSERT INTO MaquinaCafes (id_maquina, id_cafe) VALUES (%s, %s)', (id_maquina, id_cafe))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({'mensaje': 'Cafés de la máquina actualizados correctamente'})
+
+# Obtener máquinas alquiladas
+@maquinas_bp.route('/alquiladas', methods=['GET'])
+def maquinas_alquiladas():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    query = """
+        SELECT DISTINCT m.id_maquina, m.modelo, m.marca
+        FROM Alquileres a
+        JOIN Maquinas m ON a.id_maquina = m.id_maquina
+        WHERE a.fecha_fin IS NULL
+    """
+    cursor.execute(query)
+    maquinas = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(maquinas)

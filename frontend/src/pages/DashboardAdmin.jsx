@@ -1,30 +1,26 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const DashboardAdmin = () => {
-  const navigate = useNavigate();
-
-  const secciones = [
-    { label: 'Proveedores', path: '/admin/proveedores' },
-    { label: 'Máquinas', path: '/admin/maquinas' },
-    { label: 'Técnicos', path: '/admin/tecnicos' },
-    { label: 'Solicitudes de mantenimiento', path: '/admin/mantenimientos' },
-    { label: 'Máquinas por cliente', path: '/admin/maquinas-cliente' },
-    { label: 'Ganancias', path: '/admin/ganancias' },
-    { label: 'Gestion de clientes', path: '/admin/clientes' },
-    { label: 'Gestion de insumos', path: '/admin/insumos' },
-  ];
-
   return (
     <div style={{ padding: 20 }}>
-      <h1>Panel de Administración</h1>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 20 }}>
-        {secciones.map((s, i) => (
-          <button key={i} onClick={() => navigate(s.path)}>{s.label}</button>
-        ))}
-      </div>
+      <h2>Panel de Administrador</h2>
+      <ul>
+        <li><Link to="/admin/proveedores">ABM Proveedores</Link></li>
+        <li><Link to="/admin/insumos">ABM Insumos</Link></li>
+        <li><Link to="/admin/cafes">ABM Cafés</Link></li>
+        <li><Link to="/admin/clientes">ABM Clientes</Link></li>
+        <li><Link to="/admin/maquinas">ABM Máquinas</Link></li>
+        <li><Link to="/admin/tecnicos">ABM Técnicos</Link></li>
+        <li><Link to="/admin/mantenimientos">ABM Mantenimientos</Link></li>
+        <li><Link to="/admin/atender-mantenimientos">Atender Solicitudes de Mantenimiento</Link></li>
+        <li><Link to="/admin/maquinas-por-cliente">Alquileres activos</Link></li>
+        <li><Link to="/admin/ventas">Registro de Ventas</Link></li>
+        <li><Link to="/admin/ganancias">Reporte: Ganancias</Link></li>
+        <li><Link to="/admin/costes-rendimiento">Reporte: Costes y Rendimiento</Link></li>
+      </ul>
     </div>
   );
 };
 
-export default DashboardAdmin;
+export default DashboardAdmin; 

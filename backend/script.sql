@@ -60,6 +60,33 @@ CREATE TABLE Maquinas (
 );
 
 
+CREATE TABLE Cafes (
+    id_cafe INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_cafe VARCHAR(100),
+    precio_venta DECIMAL(10,2),
+    descripcion TEXT
+);
+
+
+CREATE TABLE MaquinaCafes (
+    id_maquina INT,
+    id_cafe INT,
+    PRIMARY KEY (id_maquina, id_cafe),
+    FOREIGN KEY (id_maquina) REFERENCES Maquinas(id_maquina),
+    FOREIGN KEY (id_cafe) REFERENCES Cafes(id_cafe)
+);
+
+
+CREATE TABLE CafeInsumos (
+    id_cafe INT,
+    id_insumo INT,
+    cantidad_por_servicio DECIMAL(10,2),
+    PRIMARY KEY (id_cafe, id_insumo),
+    FOREIGN KEY (id_cafe) REFERENCES Cafes(id_cafe),
+    FOREIGN KEY (id_insumo) REFERENCES Insumos(id_insumo)
+);
+
+
 CREATE TABLE Alquileres (
     id_alquiler INT AUTO_INCREMENT PRIMARY KEY,
     id_maquina INT,
@@ -70,6 +97,18 @@ CREATE TABLE Alquileres (
     coste_total_alquiler DECIMAL(12,2) DEFAULT 0,
     FOREIGN KEY (id_maquina) REFERENCES Maquinas(id_maquina),
     FOREIGN KEY (id_cliente) REFERENCES Clientes(id_cliente)
+);
+
+
+CREATE TABLE Ventas (
+    id_venta INT AUTO_INCREMENT PRIMARY KEY,
+    id_alquiler INT,
+    id_cafe INT,
+    cantidad INT,
+    precio_unitario DECIMAL(10,2),
+    fecha_venta DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_alquiler) REFERENCES Alquileres(id_alquiler),
+    FOREIGN KEY (id_cafe) REFERENCES Cafes(id_cafe)
 );
 
 CREATE TABLE GananciasMaquina (

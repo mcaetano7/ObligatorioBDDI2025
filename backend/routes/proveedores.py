@@ -20,6 +20,7 @@ def listar_proveedores():
     conn.close()
     return jsonify(resultados)
 
+@proveedores_bp.route('', methods=['POST'])
 @proveedores_bp.route('/', methods=['POST'])
 def crear_proveedor():
     data = request.json

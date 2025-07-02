@@ -200,7 +200,11 @@ def maquinas_por_cliente():
             m.marca,
             c.nombre_empresa AS nombre_cliente,
             'Ubicación X' AS ubicacion, -- Si tenés una tabla de ubicaciones real, reemplazalo
-            IFNULL(SUM(g.ganancia_empresa), 0) AS ganancia_empresa
+            IFNULL(SUM(g.ganancia_empresa), 0) AS ganancia_empresa,
+            CASE
+                WHEN CURDATE() BETWEEN a.fecha_inicio AND a.fecha_fin THEN 'Alquilada'
+                ELSE 'Disponible'
+            END AS estado
         FROM Alquileres a
         JOIN Maquinas m ON a.id_maquina = m.id_maquina
         JOIN Clientes c ON a.id_cliente = c.id_cliente

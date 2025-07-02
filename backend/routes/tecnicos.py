@@ -20,6 +20,7 @@ def listar_tecnicos():
     conn.close()
     return jsonify(resultados)
 
+@tecnicos_bp.route('', methods=['POST'])
 @tecnicos_bp.route('/', methods=['POST'])
 def crear_tecnico():
     data = request.json

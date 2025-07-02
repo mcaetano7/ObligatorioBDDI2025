@@ -23,3 +23,13 @@ export async function getIdClienteByUsuario(idUsuario) {
   const res = await fetch(`http://localhost:5000/cliente/id-cliente/${idUsuario}`);
   return res.json();
 }
+
+export async function getAllInsumos() {
+  const res = await fetch('http://localhost:5000/insumos/');
+  return res.json();
+}
+
+export async function getAllCafes() {
+  const res = await fetch('http://localhost:5000/cafes/');
+  return res.json();
+}

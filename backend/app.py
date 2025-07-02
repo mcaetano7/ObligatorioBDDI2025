@@ -7,6 +7,8 @@ from routes.proveedores import proveedores_bp
 from routes.tecnicos import tecnicos_bp
 from routes.mantenimientos import mantenimientos_bp
 from routes.reportes import reportes_bp
+from routes.cafes import cafes_bp
+from routes.ventas import ventas_bp
 
 from flask import Flask
 from flask_cors import CORS
@@ -23,6 +25,8 @@ app.register_blueprint(proveedores_bp)
 app.register_blueprint(tecnicos_bp)
 app.register_blueprint(mantenimientos_bp)
 app.register_blueprint(reportes_bp)
+app.register_blueprint(cafes_bp)
+app.register_blueprint(ventas_bp)
 
 
 @app.route('/')

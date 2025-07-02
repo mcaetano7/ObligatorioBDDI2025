@@ -3,94 +3,123 @@ import axios from 'axios';
 
 const TecnicosAdmin = () => {
   const [tecnicos, setTecnicos] = useState([]);
-  const [form, setForm] = useState({ nombre_tecnico: '', telefono: '', email: '' });
-  const [editandoId, setEditandoId] = useState(null);
+  const [nuevo, setNuevo] = useState({ nombre_tecnico: '', telefono: '', email: '' });
+  const [error, setError] = useState('');
+  const [editId, setEditId] = useState(null);
+  const [editData, setEditData] = useState({});
 
   const fetchTecnicos = async () => {
-    const res = await axios.get('http://localhost:5000/tecnicos/');
+    const res = await axios.get('http://localhost:5000/tecnicos');
     setTecnicos(res.data);
   };
 
-  useEffect(() => {
-    fetchTecnicos();
-  }, []);
+  useEffect(() => { fetchTecnicos(); }, []);
 
   const handleChange = e => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setNuevo({ ...nuevo, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async e => {
+  const handleAdd = async e => {
     e.preventDefault();
+    setError('');
     try {
-      if (editandoId) {
-        await axios.put(`http://localhost:5000/tecnicos/${editandoId}`, form);
-      } else {
-        await axios.post('http://localhost:5000/tecnicos/', form);
-      }
-      setForm({ nombre_tecnico: '', telefono: '', email: '' });
-      setEditandoId(null);
+      await axios.post('http://localhost:5000/tecnicos', nuevo);
+      setNuevo({ nombre_tecnico: '', telefono: '', email: '' });
       fetchTecnicos();
     // eslint-disable-next-line no-unused-vars
     } catch (err) {
-      alert('Error al guardar técnico');
+      setError('Error al agregar técnico');
     }
   };
 
-  const handleEditar = tecnico => {
-    setForm({
-      nombre_tecnico: tecnico.nombre_tecnico,
-      telefono: tecnico.telefono,
-      email: tecnico.email
-    });
-    setEditandoId(tecnico.id_tecnico);
-  };
-
-  const handleEliminar = async id => {
+  const handleDelete = async id => {
     if (!window.confirm('¿Eliminar técnico?')) return;
     try {
       await axios.delete(`http://localhost:5000/tecnicos/${id}`);
       fetchTecnicos();
+      setError('');
     } catch (err) {
-      alert(err?.response?.data?.error || 'Error al eliminar técnico');
+      if (err.response && err.response.data && err.response.data.error && (err.response.data.error.toLowerCase().includes('mantenimiento') || err.response.data.error.toLowerCase().includes('foreign'))) {
+        setError('No se puede eliminar un técnico que está realizando un mantenimiento');
+      } else {
+        setError('Error al eliminar técnico');
+      }
     }
+  };
+
+  const handleEdit = (t) => {
+    setEditId(t.id_tecnico);
+    setEditData({ ...t });
+  };
+
+  const handleEditChange = e => {
+    setEditData({ ...editData, [e.target.name]: e.target.value });
+  };
+
+  const handleEditSave = async e => {
+    e.preventDefault();
+    try {
+      await axios.put(`http://localhost:5000/tecnicos/${editId}`, editData);
+      setEditId(null);
+      setEditData({});
+      fetchTecnicos();
+    // eslint-disable-next-line no-unused-vars
+    } catch (err) {
+      setError('Error al editar técnico');
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditId(null);
+    setEditData({});
   };
 
   return (
     <div style={{ padding: 20 }}>
-      <h2>Gestión de Técnicos</h2>
-      <form onSubmit={handleSubmit} style={{ marginBottom: 20 }}>
-        <input
-          name="nombre_tecnico"
-          placeholder="Nombre"
-          value={form.nombre_tecnico}
-          onChange={handleChange}
-          required
-        />
-        <input
-          name="telefono"
-          placeholder="Teléfono"
-          value={form.telefono}
-          onChange={handleChange}
-        />
-        <input
-          name="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-        />
-        <button type="submit">{editandoId ? 'Actualizar' : 'Agregar'}</button>
+      <h2>Administrar Técnicos</h2>
+      <form onSubmit={handleAdd} style={{ marginBottom: 20 }}>
+        <input name="nombre_tecnico" placeholder="Nombre" value={nuevo.nombre_tecnico} onChange={handleChange} required />
+        <input name="telefono" placeholder="Teléfono" value={nuevo.telefono} onChange={handleChange} required />
+        <input name="email" placeholder="Email" value={nuevo.email} onChange={handleChange} required />
+        <button type="submit">Agregar</button>
+        {error && <span style={{ color: 'red', marginLeft: 10 }}>{error}</span>}
       </form>
-      <ul>
-        {tecnicos.map(t => (
-          <li key={t.id_tecnico}>
-            <b>{t.nombre_tecnico}</b> — {t.telefono || 'Sin teléfono'} — {t.email || 'Sin email'} — {t.cantidad_mantenimientos} mantenimientos
-            <button onClick={() => handleEditar(t)}>Editar</button>
-            <button onClick={() => handleEliminar(t.id_tecnico)}>Eliminar</button>
-          </li>
-        ))}
-      </ul>
+      <table border="1" cellPadding="5">
+        <thead>
+          <tr>
+            <th>Nombre</th><th>Teléfono</th><th>Email</th><th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {tecnicos.map(t => (
+            <tr key={t.id_tecnico}>
+              {editId === t.id_tecnico ? (
+                <>
+                  <td><input name="nombre_tecnico" value={editData.nombre_tecnico} onChange={handleEditChange} required /></td>
+                  <td><input name="telefono" value={editData.telefono} onChange={handleEditChange} required /></td>
+                  <td><input name="email" value={editData.email} onChange={handleEditChange} required /></td>
+                  <td>
+                    <button onClick={handleEditSave}>Guardar</button>
+                    <button type="button" onClick={handleEditCancel}>Cancelar</button>
+                  </td>
+                </>
+              ) : (
+                <>
+                  <td>{t.nombre_tecnico}</td>
+                  <td>{t.telefono}</td>
+                  <td>{t.email}</td>
+                  <td>
+                    <button onClick={() => handleEdit(t)}>Editar</button>
+                    <button onClick={() => handleDelete(t.id_tecnico)}>Eliminar</button>
+                  </td>
+                </>
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
 
-export default TecnicosAdmin;
+export default TecnicosAdmin; 

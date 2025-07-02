@@ -3,114 +3,92 @@ import axios from 'axios';
 
 const MantenimientosAdmin = () => {
   const [mantenimientos, setMantenimientos] = useState([]);
-  const [completados, setCompletados] = useState([]);
+  const [nuevo, setNuevo] = useState({ id_alquiler: '', fecha_solicitud: '', descripcion: '', id_tecnico_asignado: '' });
+  const [error, setError] = useState('');
+  const [alquileres, setAlquileres] = useState([]);
   const [tecnicos, setTecnicos] = useState([]);
 
   const fetchMantenimientos = async () => {
-    const res = await axios.get('http://localhost:5000/mantenimientos/pendientes');
+    const res = await axios.get('http://localhost:5000/mantenimientos');
     setMantenimientos(res.data);
   };
-
-  const fetchCompletados = async () => {
-    const res = await axios.get('http://localhost:5000/mantenimientos/completados');
-    setCompletados(res.data);
+  const fetchAlquileres = async () => {
+    const res = await axios.get('http://localhost:5000/alquileres');
+    setAlquileres(res.data);
   };
-
   const fetchTecnicos = async () => {
-    const res = await axios.get('http://localhost:5000/tecnicos/');
+    const res = await axios.get('http://localhost:5000/tecnicos');
     setTecnicos(res.data);
   };
 
-  useEffect(() => {
-    fetchMantenimientos();
-    fetchCompletados();
-    fetchTecnicos();
-  }, []);
+  useEffect(() => { fetchMantenimientos(); fetchAlquileres(); fetchTecnicos(); }, []);
 
-  const asignarTecnico = async (id_solicitud, id_tecnico) => {
+  const handleChange = e => {
+    setNuevo({ ...nuevo, [e.target.name]: e.target.value });
+  };
+
+  const handleAdd = async e => {
+    e.preventDefault();
+    setError('');
     try {
-      await axios.post('http://localhost:5000/mantenimientos/asignar-tecnico', {
-        id_solicitud,
-        id_tecnico
-      });
+      await axios.post('http://localhost:5000/mantenimientos', nuevo);
+      setNuevo({ id_alquiler: '', fecha_solicitud: '', descripcion: '', id_tecnico_asignado: '' });
       fetchMantenimientos();
-      fetchCompletados();
     // eslint-disable-next-line no-unused-vars
     } catch (err) {
-      alert('Error al asignar técnico');
+      setError('Error al agregar mantenimiento');
     }
   };
 
-  const completarMantenimiento = async (id_solicitud) => {
+  const handleDelete = async id => {
+    if (!window.confirm('¿Eliminar mantenimiento?')) return;
     try {
-      await axios.post(`http://localhost:5000/mantenimientos/completar/${id_solicitud}`);
+      await axios.delete(`http://localhost:5000/mantenimientos/${id}`);
       fetchMantenimientos();
-      fetchCompletados();
     // eslint-disable-next-line no-unused-vars
     } catch (err) {
-      alert('Error al marcar como completado');
+      setError('Error al eliminar mantenimiento');
     }
   };
 
   return (
     <div style={{ padding: 20 }}>
-      <h2>Mantenimientos Pendientes</h2>
-      <ul>
-        {mantenimientos.map(m => (
-          <li key={m.id_solicitud} style={{ marginBottom: '20px' }}>
-            <b>Máquina:</b> {m.modelo} - Cliente: {m.nombre_empresa}<br />
-            <b>Descripción:</b> {m.descripcion}<br />
-            <label>
-              Asignar técnico:
-              <select
-                onChange={(e) => asignarTecnico(m.id_solicitud, e.target.value)}
-                defaultValue=""
-              >
-                <option value="" disabled>Seleccionar técnico</option>
-                {tecnicos.map(t => (
-                  <option key={t.id_tecnico} value={t.id_tecnico}>
-                    {t.nombre_tecnico} ({t.cantidad_mantenimientos} mantenimientos)
-                  </option>
-                ))}
-              </select>
-            </label>
-            <br />
-            <button
-              style={{ marginTop: '5px' }}
-              onClick={() => completarMantenimiento(m.id_solicitud)}
-            >
-              Marcar como Completado
-            </button>
-          </li>
-        ))}
-      </ul>
-
-      <hr />
-
-      <h2>Mantenimientos Completados</h2>
-      <ul>
-        {completados.map(c => (
-          <li key={c.id_solicitud} style={{ marginBottom: '15px' }}>
-            <b>Máquina:</b> {c.modelo} - Cliente: {c.nombre_empresa}<br />
-            <b>Técnico:</b> {c.nombre_tecnico || 'Sin asignar'}<br />
-            <b>Descripción:</b> {c.descripcion}<br />
-            <b>Fecha resolución:</b> {c.fecha_resolucion}
-          </li>
-        ))}
-      </ul>
-
-      <hr />
-
-      <h3>Lista de Técnicos</h3>
-      <ul>
-        {tecnicos.map(t => (
-          <li key={t.id_tecnico}>
-            {t.id_tecnico} - {t.nombre_tecnico} ({t.cantidad_mantenimientos} mantenimientos)
-          </li>
-        ))}
-      </ul>
+      <h2>Administrar Mantenimientos</h2>
+      <form onSubmit={handleAdd} style={{ marginBottom: 20 }}>
+        <select name="id_alquiler" value={nuevo.id_alquiler} onChange={handleChange} required>
+          <option value="">Alquiler</option>
+          {alquileres.map(a => <option key={a.id_alquiler} value={a.id_alquiler}>{a.id_alquiler}</option>)}
+        </select>
+        <input name="fecha_solicitud" type="date" value={nuevo.fecha_solicitud} onChange={handleChange} required />
+        <input name="descripcion" placeholder="Descripción" value={nuevo.descripcion} onChange={handleChange} required />
+        <select name="id_tecnico_asignado" value={nuevo.id_tecnico_asignado} onChange={handleChange} required>
+          <option value="">Técnico</option>
+          {tecnicos.map(t => <option key={t.id_tecnico} value={t.id_tecnico}>{t.nombre_tecnico}</option>)}
+        </select>
+        <button type="submit">Agregar</button>
+        {error && <span style={{ color: 'red', marginLeft: 10 }}>{error}</span>}
+      </form>
+      <table border="1" cellPadding="5">
+        <thead>
+          <tr>
+            <th>ID</th><th>Alquiler</th><th>Fecha Solicitud</th><th>Descripción</th><th>Técnico</th><th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {mantenimientos.map(m => (
+            <tr key={m.id_solicitud}>
+              <td>{m.id_solicitud}</td>
+              <td>{m.id_alquiler}</td>
+              <td>{m.fecha_solicitud}</td>
+              <td>{m.descripcion}</td>
+              <td>{tecnicos.find(t => t.id_tecnico === m.id_tecnico_asignado)?.nombre_tecnico || '-'}</td>
+              <td><button onClick={() => handleDelete(m.id_solicitud)}>Eliminar</button></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
 
-export default MantenimientosAdmin;
+export default MantenimientosAdmin; 

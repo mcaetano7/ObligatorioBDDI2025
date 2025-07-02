@@ -12,7 +12,6 @@ def maquinas_disponibles():
         SELECT * FROM Maquinas
         WHERE id_maquina NOT IN (
             SELECT id_maquina FROM Alquileres
-            WHERE CURDATE() BETWEEN fecha_inicio AND fecha_fin
         )
     """
     cursor.execute(query)
@@ -36,15 +35,32 @@ def crear_alquiler():
     conn = get_connection()
     cursor = conn.cursor()
 
+    # Obtener el costo mensual de la máquina
+    cursor.execute("SELECT costo_mensual_alquiler FROM Maquinas WHERE id_maquina = %s", (id_maquina,))
+    row = cursor.fetchone()
+    if not row:
+        cursor.close()
+        conn.close()
+        return jsonify({'error': 'Máquina no encontrada'}), 404
+    costo_mensual = float(row[0])
+
+    # Calcular la cantidad de meses entre fecha_inicio y fecha_fin
+    cursor.execute("SELECT TIMESTAMPDIFF(MONTH, %s, %s)", (fecha_inicio, fecha_fin))
+    meses = cursor.fetchone()[0]
+    if meses < 1:
+        meses = 1  # Al menos un mes de alquiler
+    coste_total = costo_mensual * meses
+
+    # Insertar el alquiler con el coste total calculado
     query = """
-        INSERT INTO Alquileres (id_cliente, id_maquina, fecha_inicio, fecha_fin)
-        VALUES (%s, %s, %s, %s)
+        INSERT INTO Alquileres (id_cliente, id_maquina, fecha_inicio, fecha_fin, coste_total_alquiler)
+        VALUES (%s, %s, %s, %s, %s)
     """
-    cursor.execute(query, (id_cliente, id_maquina, fecha_inicio, fecha_fin))
+    cursor.execute(query, (id_cliente, id_maquina, fecha_inicio, fecha_fin, coste_total))
     conn.commit()
     cursor.close()
     conn.close()
-    return jsonify({'mensaje': 'Alquiler registrado'}), 201
+    return jsonify({'mensaje': 'Alquiler registrado', 'coste_total_alquiler': coste_total}), 201
 
 
 @cliente_bp.route('/id-cliente/<int:id_usuario>', methods=['GET'])
@@ -134,7 +150,11 @@ def total_ganancias_cliente(id_cliente):
 def obtener_clientes():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM Clientes")
+    cursor.execute("""
+        SELECT c.*, u.nombre_usuario AS nombre
+        FROM Clientes c
+        LEFT JOIN Usuarios u ON c.rut = u.id_usuario
+    """)
     clientes = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -253,3 +273,13 @@ def detalle_alquiler(id_alquiler):
         "info": info,
         "insumos": insumos
     })
+
+@cliente_bp.route('/roles', methods=['GET'])
+def listar_roles():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM Roles")
+    roles = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(roles)
