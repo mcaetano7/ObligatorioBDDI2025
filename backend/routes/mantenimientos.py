@@ -1,186 +1,197 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, request, jsonify
 from db import get_connection
 
-mantenimientos_bp = Blueprint('mantenimientos', __name__, url_prefix='/mantenimientos')
+mantenimiento_bp = Blueprint('mantenimiento', __name__, url_prefix='/mantenimiento')
 
-@mantenimientos_bp.route('/', methods=['GET'])
-def listar_mantenimientos():
+# Obtener todas las solicitudes de mantenimiento
+@mantenimiento_bp.route('/', methods=['GET'])
+def obtener_solicitudes():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
-    query = """
-        SELECT 
-            sm.*,
-            c.nombre_empresa,
-            m.modelo,
-            m.marca,
-            t.nombre_tecnico
-        FROM SolicitudesMantenimiento sm
-        JOIN Alquileres a ON sm.id_alquiler = a.id_alquiler
-        JOIN Clientes c ON a.id_cliente = c.id_cliente
-        JOIN Maquinas m ON a.id_maquina = m.id_maquina
-        LEFT JOIN Tecnicos t ON sm.id_tecnico_asignado = t.id_tecnico
-        ORDER BY sm.fecha_solicitud DESC
-    """
-    cursor.execute(query)
-    resultados = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return jsonify(resultados)
-
-@mantenimientos_bp.route('/', methods=['POST'])
-def crear_mantenimiento():
-    data = request.json
-    conn = get_connection()
-    cursor = conn.cursor()
-    
-    query = """
-        INSERT INTO SolicitudesMantenimiento (id_alquiler, fecha_solicitud, descripcion)
-        VALUES (%s, CURDATE(), %s)
-    """
-    cursor.execute(query, (
-        data['id_alquiler'],
-        data['descripcion']
-    ))
-    conn.commit()
-    cursor.close()
-    conn.close()
-    return jsonify({'mensaje': 'Solicitud de mantenimiento creada correctamente'}), 201
-
-@mantenimientos_bp.route('/<int:id_solicitud>', methods=['PUT'])
-def actualizar_mantenimiento(id_solicitud):
-    data = request.json
-    conn = get_connection()
-    cursor = conn.cursor()
-    
-    query = """
-        UPDATE SolicitudesMantenimiento 
-        SET descripcion = %s, id_tecnico_asignado = %s, fecha_asignacion = %s, fecha_resolucion = %s
-        WHERE id_solicitud = %s
-    """
-    cursor.execute(query, (
-        data.get('descripcion'),
-        data.get('id_tecnico_asignado'),
-        data.get('fecha_asignacion'),
-        data.get('fecha_resolucion'),
-        id_solicitud
-    ))
-    conn.commit()
-    cursor.close()
-    conn.close()
-    return jsonify({'mensaje': 'Mantenimiento actualizado correctamente'})
-
-@mantenimientos_bp.route('/<int:id_solicitud>', methods=['DELETE'])
-def eliminar_mantenimiento(id_solicitud):
-    conn = get_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute("DELETE FROM SolicitudesMantenimiento WHERE id_solicitud = %s", (id_solicitud,))
-    conn.commit()
-    cursor.close()
-    conn.close()
-    return jsonify({'mensaje': 'Mantenimiento eliminado correctamente'})
-
-@mantenimientos_bp.route('/asignar-tecnico', methods=['POST'])
-def asignar_tecnico():
-    data = request.json
-    conn = get_connection()
-    cursor = conn.cursor()
-    
-    # Verificar si el técnico ya está asignado a otra solicitud pendiente
     cursor.execute("""
-        SELECT COUNT(*) as count 
-        FROM SolicitudesMantenimiento 
-        WHERE id_tecnico_asignado = %s AND fecha_resolucion IS NULL AND id_solicitud != %s
-    """, (data['id_tecnico'], data['id_solicitud']))
-    
-    result = cursor.fetchone()
-    if result[0] > 0:
+        SELECT sm.*, c.nombre_empresa, t.nombre_tecnico, m.modelo, m.marca 
+        FROM SolicitudesMantenimiento sm 
+        JOIN Alquileres a ON sm.id_alquiler = a.id_alquiler 
+        JOIN Clientes c ON a.id_cliente = c.id_cliente 
+        JOIN Maquinas m ON a.id_maquina = m.id_maquina 
+        LEFT JOIN Tecnicos t ON sm.id_tecnico_asignado = t.id_tecnico
+    """)
+    solicitudes = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(solicitudes)
+
+# Crear nueva solicitud de mantenimiento
+@mantenimiento_bp.route('/', methods=['POST'])
+def crear_solicitud():
+    data = request.get_json()
+    id_alquiler = data.get('id_alquiler')
+    descripcion = data.get('descripcion')
+    id_tecnico_asignado = data.get('id_tecnico_asignado')
+
+    if not all([id_alquiler, descripcion]):
+        return jsonify({'error': 'Faltan datos requeridos'}), 400
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        if id_tecnico_asignado:
+            cursor.execute("""
+                INSERT INTO SolicitudesMantenimiento (id_alquiler, fecha_solicitud, descripcion, id_tecnico_asignado, fecha_asignacion) 
+                VALUES (%s, CURDATE(), %s, %s, CURDATE())
+            """, (id_alquiler, descripcion, id_tecnico_asignado))
+        else:
+            cursor.execute("""
+                INSERT INTO SolicitudesMantenimiento (id_alquiler, fecha_solicitud, descripcion) 
+                VALUES (%s, CURDATE(), %s)
+            """, (id_alquiler, descripcion))
+        
+        conn.commit()
+        return jsonify({'mensaje': 'Solicitud de mantenimiento creada correctamente'}), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 400
+    finally:
         cursor.close()
         conn.close()
-        return jsonify({'error': 'El técnico ya está asignado a otra solicitud pendiente'}), 400
-    
-    query = """
-        UPDATE SolicitudesMantenimiento 
-        SET id_tecnico_asignado = %s, fecha_asignacion = CURDATE()
-        WHERE id_solicitud = %s
-    """
-    cursor.execute(query, (
-        data['id_tecnico'],
-        data['id_solicitud']
-    ))
-    conn.commit()
-    cursor.close()
-    conn.close()
-    return jsonify({'mensaje': 'Técnico asignado correctamente'})
 
-@mantenimientos_bp.route('/completar/<int:id_solicitud>', methods=['POST'])
-def completar_mantenimiento(id_solicitud):
+# Actualizar solicitud de mantenimiento
+@mantenimiento_bp.route('/<int:id_solicitud>', methods=['PUT'])
+def actualizar_solicitud(id_solicitud):
+    data = request.get_json()
+    descripcion = data.get('descripcion')
+    id_tecnico_asignado = data.get('id_tecnico_asignado')
+
+    if not descripcion:
+        return jsonify({'error': 'Falta descripción'}), 400
+
     conn = get_connection()
     cursor = conn.cursor()
-    
-    query = """
-        UPDATE SolicitudesMantenimiento 
-        SET fecha_resolucion = NOW()
-        WHERE id_solicitud = %s
-    """
-    cursor.execute(query, (id_solicitud,))
-    
-    if cursor.rowcount == 0:
+    try:
+        if id_tecnico_asignado:
+            cursor.execute("""
+                UPDATE SolicitudesMantenimiento 
+                SET descripcion = %s, id_tecnico_asignado = %s, fecha_asignacion = CURDATE() 
+                WHERE id_solicitud = %s
+            """, (descripcion, id_tecnico_asignado, id_solicitud))
+        else:
+            cursor.execute("""
+                UPDATE SolicitudesMantenimiento 
+                SET descripcion = %s 
+                WHERE id_solicitud = %s
+            """, (descripcion, id_solicitud))
+        
+        if cursor.rowcount == 0:
+            return jsonify({'error': 'Solicitud no encontrada'}), 404
+            
+        conn.commit()
+        return jsonify({'mensaje': 'Solicitud actualizada correctamente'})
+    except Exception as e:
         conn.rollback()
+        return jsonify({'error': str(e)}), 400
+    finally:
+        cursor.close()
+        conn.close()
+
+# Marcar solicitud como completada
+@mantenimiento_bp.route('/<int:id_solicitud>/completar', methods=['PUT'])
+def completar_solicitud(id_solicitud):
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            UPDATE SolicitudesMantenimiento 
+            SET fecha_resolucion = CURDATE() 
+            WHERE id_solicitud = %s
+        """, (id_solicitud,))
+        
+        if cursor.rowcount == 0:
+            return jsonify({'error': 'Solicitud no encontrada'}), 404
+            
+        conn.commit()
+        return jsonify({'mensaje': 'Solicitud marcada como completada'})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 400
+    finally:
+        cursor.close()
+        conn.close()
+
+# Eliminar solicitud de mantenimiento
+@mantenimiento_bp.route('/<int:id_solicitud>', methods=['DELETE'])
+def eliminar_solicitud(id_solicitud):
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM SolicitudesMantenimiento WHERE id_solicitud = %s", (id_solicitud,))
+        if cursor.rowcount == 0:
+            return jsonify({'error': 'Solicitud no encontrada'}), 404
+        conn.commit()
+        return jsonify({'mensaje': 'Solicitud eliminada correctamente'})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 400
+    finally:
+        cursor.close()
+        conn.close()
+
+# Obtener solicitud por ID
+@mantenimiento_bp.route('/<int:id_solicitud>', methods=['GET'])
+def obtener_solicitud(id_solicitud):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT sm.*, c.nombre_empresa, t.nombre_tecnico, m.modelo, m.marca 
+        FROM SolicitudesMantenimiento sm 
+        JOIN Alquileres a ON sm.id_alquiler = a.id_alquiler 
+        JOIN Clientes c ON a.id_cliente = c.id_cliente 
+        JOIN Maquinas m ON a.id_maquina = m.id_maquina 
+        LEFT JOIN Tecnicos t ON sm.id_tecnico_asignado = t.id_tecnico 
+        WHERE sm.id_solicitud = %s
+    """, (id_solicitud,))
+    solicitud = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    
+    if solicitud:
+        return jsonify(solicitud)
+    else:
         return jsonify({'error': 'Solicitud no encontrada'}), 404
 
-    conn.commit()
-    cursor.close()
-    conn.close()
-    return jsonify({'mensaje': 'Mantenimiento completado correctamente'})
-
-@mantenimientos_bp.route('/pendientes', methods=['GET'])
-def mantenimientos_pendientes():
+# Obtener solicitudes pendientes (no completadas)
+@mantenimiento_bp.route('/pendientes', methods=['GET'])
+def obtener_solicitudes_pendientes():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
-    query = """
-        SELECT 
-            sm.id_solicitud,
-            sm.descripcion,
-            sm.fecha_solicitud,
-            sm.id_alquiler,
-            c.nombre_empresa,
-            m.modelo,
-            m.marca
-        FROM SolicitudesMantenimiento sm
-        JOIN Alquileres a ON sm.id_alquiler = a.id_alquiler
-        JOIN Clientes c ON a.id_cliente = c.id_cliente
-        JOIN Maquinas m ON a.id_maquina = m.id_maquina
+    cursor.execute("""
+        SELECT sm.*, c.nombre_empresa, t.nombre_tecnico, m.modelo, m.marca 
+        FROM SolicitudesMantenimiento sm 
+        JOIN Alquileres a ON sm.id_alquiler = a.id_alquiler 
+        JOIN Clientes c ON a.id_cliente = c.id_cliente 
+        JOIN Maquinas m ON a.id_maquina = m.id_maquina 
+        LEFT JOIN Tecnicos t ON sm.id_tecnico_asignado = t.id_tecnico 
         WHERE sm.fecha_resolucion IS NULL
-        ORDER BY sm.fecha_solicitud ASC
-    """
-    cursor.execute(query)
-    data = cursor.fetchall()
+    """)
+    solicitudes = cursor.fetchall()
     cursor.close()
     conn.close()
-    return jsonify(data)
+    return jsonify(solicitudes)
 
-@mantenimientos_bp.route('/completados', methods=['GET'])
-def mantenimientos_completados():
+# Obtener solicitudes por técnico
+@mantenimiento_bp.route('/tecnico/<int:id_tecnico>', methods=['GET'])
+def obtener_solicitudes_por_tecnico(id_tecnico):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
-    query = """
-        SELECT 
-            sm.*,
-            c.nombre_empresa,
-            m.modelo,
-            m.marca,
-            t.nombre_tecnico
-        FROM SolicitudesMantenimiento sm
-        JOIN Alquileres a ON sm.id_alquiler = a.id_alquiler
-        JOIN Clientes c ON a.id_cliente = c.id_cliente
-        JOIN Maquinas m ON a.id_maquina = m.id_maquina
-        LEFT JOIN Tecnicos t ON sm.id_tecnico_asignado = t.id_tecnico
-        WHERE sm.fecha_resolucion IS NOT NULL
-        ORDER BY sm.fecha_resolucion DESC
-    """
-    cursor.execute(query)
-    data = cursor.fetchall()
+    cursor.execute("""
+        SELECT sm.*, c.nombre_empresa, t.nombre_tecnico, m.modelo, m.marca 
+        FROM SolicitudesMantenimiento sm 
+        JOIN Alquileres a ON sm.id_alquiler = a.id_alquiler 
+        JOIN Clientes c ON a.id_cliente = c.id_cliente 
+        JOIN Maquinas m ON a.id_maquina = m.id_maquina 
+        JOIN Tecnicos t ON sm.id_tecnico_asignado = t.id_tecnico 
+        WHERE sm.id_tecnico_asignado = %s
+    """, (id_tecnico,))
+    solicitudes = cursor.fetchall()
     cursor.close()
     conn.close()
-    return jsonify(data) 
+    return jsonify(solicitudes) 

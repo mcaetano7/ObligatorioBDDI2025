@@ -20,13 +20,13 @@ INSERT INTO Insumos (nombre_insumo, unidad_medida, costo_unitario, id_proveedor)
 ('Edulcorante en polvo 500g', 'Endulzante', 110.00, 3);
 
 -- Maquinas
-INSERT INTO Maquinas (modelo, marca, capacidad_cafe, capacidad_agua, costo_mensual_alquiler, porcentaje_ganancia_empresa) VALUES
-('Saeco Aulika Top', 'Saeco', 1000.00, 2000.00, 2500.00, 20),
-('Necta Krea Touch', 'Necta', 1200.00, 2500.00, 3200.00, 25),
-('Saeco Lirika One Touch', 'Saeco', 900.00, 1800.00, 2800.00, 22),
-('Necta Solista', 'Necta', 850.00, 1700.00, 2300.00, 18),
-('Saeco Royal', 'Saeco', 1100.00, 2100.00, 2600.00, 21),
-('Necta Brio Up', 'Necta', 950.00, 1900.00, 2400.00, 19);
+INSERT INTO Maquinas (modelo, marca, capacidad_cafe, capacidad_agua, costo_mensual_alquiler, porcentaje_ganancia_empresa, estado) VALUES
+('Saeco Aulika Top', 'Saeco', 1000.00, 2000.00, 2500.00, 20, FALSE),
+('Necta Krea Touch', 'Necta', 1200.00, 2500.00, 3200.00, 25, FALSE),
+('Saeco Lirika One Touch', 'Saeco', 900.00, 1800.00, 2800.00, 22, FALSE),
+('Necta Solista', 'Necta', 850.00, 1700.00, 2300.00, 18, FALSE),
+('Saeco Royal', 'Saeco', 1100.00, 2100.00, 2600.00, 21, FALSE),
+('Necta Brio Up', 'Necta', 950.00, 1900.00, 2400.00, 19, FALSE);
 
 -- Técnicos
 INSERT INTO Tecnicos (nombre_tecnico, telefono, email) VALUES

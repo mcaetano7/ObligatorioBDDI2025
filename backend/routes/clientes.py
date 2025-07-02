@@ -42,14 +42,31 @@ def crear_alquiler():
         cursor.close()
         conn.close()
         return jsonify({'error': 'Máquina no encontrada'}), 404
-    costo_mensual = float(row[0])
+    valor_costo = 0
+    if row is not None and isinstance(row, dict) and row.get('costo_mensual_alquiler') is not None:
+        valor_costo = row.get('costo_mensual_alquiler')
+    elif row is not None and isinstance(row, (list, tuple)) and len(row) > 0 and row[0] is not None:
+        valor_costo = row[0]
+    try:
+        costo_mensual = float(valor_costo)
+    except Exception:
+        costo_mensual = 0
 
     # Calcular la cantidad de meses entre fecha_inicio y fecha_fin
-    cursor.execute("SELECT TIMESTAMPDIFF(MONTH, %s, %s)", (fecha_inicio, fecha_fin))
-    meses = cursor.fetchone()[0]
+    cursor.execute("SELECT TIMESTAMPDIFF(MONTH, %s, %s) as meses", (fecha_inicio, fecha_fin))
+    meses_row = cursor.fetchone()
+    valor_meses = 1
+    if meses_row is not None and isinstance(meses_row, dict) and meses_row.get('meses') is not None:
+        valor_meses = meses_row.get('meses')
+    elif meses_row is not None and isinstance(meses_row, (list, tuple)) and len(meses_row) > 0 and meses_row[0] is not None:
+        valor_meses = meses_row[0]
+    try:
+        meses = int(valor_meses)
+    except Exception:
+        meses = 1
     if meses < 1:
         meses = 1  # Al menos un mes de alquiler
-    coste_total = costo_mensual * meses
+    coste_total = float(costo_mensual) * meses
 
     # Insertar el alquiler con el coste total calculado
     query = """
@@ -57,6 +74,8 @@ def crear_alquiler():
         VALUES (%s, %s, %s, %s, %s)
     """
     cursor.execute(query, (id_cliente, id_maquina, fecha_inicio, fecha_fin, coste_total))
+    # Actualizar el estado de la máquina a TRUE (alquilada)
+    cursor.execute("UPDATE Maquinas SET estado = TRUE WHERE id_maquina = %s", (id_maquina,))
     conn.commit()
     cursor.close()
     conn.close()
@@ -189,7 +208,6 @@ def crear_cliente():
 @cliente_bp.route('/<int:id_cliente>', methods=['PUT'])
 def actualizar_cliente(id_cliente):
     data = request.get_json()
-    rut = data.get('rut')
     nombre_empresa = data.get('nombre_empresa')
     direccion = data.get('direccion')
     telefono = data.get('telefono')
@@ -199,9 +217,9 @@ def actualizar_cliente(id_cliente):
     try:
         cursor.execute("""
             UPDATE Clientes
-            SET rut = %s, nombre_empresa = %s, direccion = %s, telefono = %s
+            SET nombre_empresa = %s, direccion = %s, telefono = %s
             WHERE id_cliente = %s
-        """, (rut, nombre_empresa, direccion, telefono, id_cliente))
+        """, (nombre_empresa, direccion, telefono, id_cliente))
         conn.commit()
         return jsonify({'mensaje': 'Cliente actualizado correctamente'})
     except Exception as e:

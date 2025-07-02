@@ -56,7 +56,8 @@ CREATE TABLE Maquinas (
     capacidad_cafe DECIMAL(10,2),
     capacidad_agua DECIMAL(10,2),
     costo_mensual_alquiler DECIMAL(10,2),
-    porcentaje_ganancia_empresa DECIMAL(5)
+    porcentaje_ganancia_empresa DECIMAL(5),
+    estado BOOLEAN DEFAULT FALSE
 );
 
 
