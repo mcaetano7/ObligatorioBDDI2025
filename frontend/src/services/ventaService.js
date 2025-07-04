@@ -103,6 +103,21 @@ const ventaService = {
     } catch (error) {
       throw error.response?.data || { error: 'Error de conexión' };
     }
+  },
+
+  // Obtener el insumo más consumido/caro
+  obtenerInsumoMayorCosto: async (fechaInicio, fechaFin) => {
+    try {
+      const params = {};
+      if (fechaInicio && fechaFin) {
+        params.fecha_inicio = fechaInicio;
+        params.fecha_fin = fechaFin;
+      }
+      const response = await axios.get(`${API_URL}/venta/insumo-mayor-costo`, { params });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { error: 'Error de conexión' };
+    }
   }
 };
 

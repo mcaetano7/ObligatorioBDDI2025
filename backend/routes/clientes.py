@@ -301,3 +301,56 @@ def listar_roles():
     cursor.close()
     conn.close()
     return jsonify(roles)
+
+@cliente_bp.route('/total-mensual-cobrar', methods=['GET'])
+def total_mensual_cobrar():
+    mes = request.args.get('mes')
+    anio = request.args.get('anio')
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    params = []
+    filtro_subquery = ''
+    if mes and anio:
+        filtro_subquery = 'WHERE MONTH(ci.fecha_consumo) = %s AND YEAR(ci.fecha_consumo) = %s'
+        params.extend([int(mes), int(anio)])
+    # Sumar alquileres y costos de insumos por cliente
+    cursor.execute(f'''
+        SELECT 
+            cl.id_cliente,
+            cl.nombre_empresa,
+            COALESCE(SUM(a.coste_total_alquiler), 0) as total_alquileres,
+            COALESCE(SUM(ci.costo_insumos), 0) as total_insumos,
+            COALESCE(SUM(a.coste_total_alquiler), 0) + COALESCE(SUM(ci.costo_insumos), 0) as total_cobrar
+        FROM Clientes cl
+        LEFT JOIN Alquileres a ON cl.id_cliente = a.id_cliente
+        LEFT JOIN (
+            SELECT a.id_cliente, SUM(ci.cantidad_consumida * i.costo_unitario) as costo_insumos
+            FROM ConsumoInsumos ci
+            JOIN Alquileres a ON ci.id_alquiler = a.id_alquiler
+            JOIN Insumos i ON ci.id_insumo = i.id_insumo
+            {filtro_subquery}
+            GROUP BY a.id_cliente
+        ) ci ON cl.id_cliente = ci.id_cliente
+        GROUP BY cl.id_cliente, cl.nombre_empresa
+        ORDER BY total_cobrar DESC
+    ''', params)
+    resultados = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(resultados)
+
+@cliente_bp.route('/top-clientes-alquileres', methods=['GET'])
+def top_clientes_alquileres():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute('''
+        SELECT cl.id_cliente, cl.nombre_empresa, COUNT(a.id_alquiler) as cantidad_alquileres
+        FROM Clientes cl
+        LEFT JOIN Alquileres a ON cl.id_cliente = a.id_cliente
+        GROUP BY cl.id_cliente, cl.nombre_empresa
+        ORDER BY cantidad_alquileres DESC
+    ''')
+    ranking = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(ranking)

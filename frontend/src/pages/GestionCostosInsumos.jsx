@@ -6,15 +6,18 @@ import './GestionCostosInsumos.css';
 const GestionCostosInsumos = () => {
   const [costos, setCostos] = useState([]);
   const [totales, setTotales] = useState(null);
+  const [insumoMayor, setInsumoMayor] = useState(null);
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [errorInsumo, setErrorInsumo] = useState('');
   const navigate = useNavigate();
 
   const fetchCostos = async () => {
     setLoading(true);
     setError('');
+    setErrorInsumo('');
     try {
       if (!fechaInicio || !fechaFin) {
         setLoading(false);
@@ -23,6 +26,14 @@ const GestionCostosInsumos = () => {
       const data = await ventaService.obtenerCostosInsumos(fechaInicio, fechaFin);
       setCostos(data.costos_insumos || []);
       setTotales(data.costos_totales || null);
+      // Obtener insumo más consumido/caro
+      try {
+        const insumo = await ventaService.obtenerInsumoMayorCosto(fechaInicio, fechaFin);
+        setInsumoMayor(insumo);
+      } catch (err) {
+        setInsumoMayor(null);
+        setErrorInsumo(err.error || 'No se pudo obtener el insumo más consumido');
+      }
     } catch (err) {
       setError(err.error || 'Error al obtener costos de insumos');
     } finally {
@@ -90,6 +101,16 @@ const GestionCostosInsumos = () => {
           <p>Costo total insumos: <strong>${Number(totales.total_costos_insumos || 0).toLocaleString('es-UY')}</strong></p>
         </div>
       )}
+      {insumoMayor && (
+        <div className="insumo-mayor-costo" style={{marginTop: 24}}>
+          <h4>Insumo más consumido/caro del período</h4>
+          <p><strong>Nombre:</strong> {insumoMayor.nombre_insumo}</p>
+          <p><strong>Unidad:</strong> {insumoMayor.unidad_medida}</p>
+          <p><strong>Cantidad consumida:</strong> {Number(insumoMayor.total_consumido).toLocaleString('es-UY')}</p>
+          <p><strong>Costo total:</strong> ${Number(insumoMayor.costo_total).toLocaleString('es-UY')}</p>
+        </div>
+      )}
+      {!insumoMayor && errorInsumo && <p className="error-msg">{errorInsumo}</p>}
     </div>
   );
 };

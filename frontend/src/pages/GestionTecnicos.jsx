@@ -15,10 +15,14 @@ const GestionTecnicos = () => {
     telefono: '',
     email: ''
   });
+  const [topTecnico, setTopTecnico] = useState(null);
+  const [errorTop, setErrorTop] = useState('');
+  const [mantenimientosPorTecnico, setMantenimientosPorTecnico] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
     cargarTecnicos();
+    cargarTopTecnicoYRanking();
   }, []);
 
   const cargarTecnicos = async () => {
@@ -30,6 +34,22 @@ const GestionTecnicos = () => {
       setError('Error al cargar técnicos');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const cargarTopTecnicoYRanking = async () => {
+    setErrorTop('');
+    try {
+      const ranking = await tecnicoAdminService.obtenerTopTecnicos();
+      setTopTecnico(ranking && ranking.length > 0 ? ranking[0] : null);
+      // Mapear mantenimientos por técnico
+      const map = {};
+      ranking.forEach(t => { map[t.id_tecnico] = t.mantenimientos_realizados; });
+      setMantenimientosPorTecnico(map);
+    } catch (e) {
+      setTopTecnico(null);
+      setMantenimientosPorTecnico({});
+      setErrorTop('No se pudo obtener el técnico con más mantenimientos');
     }
   };
 
@@ -113,6 +133,7 @@ const GestionTecnicos = () => {
                 <th>Nombre</th>
                 <th>Teléfono</th>
                 <th>Email</th>
+                <th>Mantenimientos realizados</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -123,6 +144,7 @@ const GestionTecnicos = () => {
                   <td>{tecnico.nombre_tecnico}</td>
                   <td>{tecnico.telefono}</td>
                   <td>{tecnico.email}</td>
+                  <td>{mantenimientosPorTecnico[tecnico.id_tecnico] || 0}</td>
                   <td>
                     <button className="btn btn-secondary" onClick={() => abrirModalEditar(tecnico)}>Editar</button>
                     <button className="btn btn-danger" onClick={() => handleEliminar(tecnico.id_tecnico)}>Eliminar</button>
@@ -133,6 +155,14 @@ const GestionTecnicos = () => {
           </table>
         </div>
       )}
+      {topTecnico && (
+        <div className="top-tecnico" style={{marginTop: 24}}>
+          <h4>Técnico con más mantenimientos realizados</h4>
+          <p><strong>Nombre:</strong> {topTecnico.nombre_tecnico}</p>
+          <p><strong>Mantenimientos realizados:</strong> {topTecnico.mantenimientos_realizados}</p>
+        </div>
+      )}
+      {!topTecnico && errorTop && <p className="error-message">{errorTop}</p>}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">

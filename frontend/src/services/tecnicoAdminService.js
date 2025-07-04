@@ -22,6 +22,15 @@ const tecnicoAdminService = {
   obtenerTecnicosDisponibles: async () => {
     const res = await axios.get(`${API_URL}/tecnico/disponibles`);
     return res.data;
+  },
+  obtenerTopTecnicos: async (mes, anio) => {
+    const params = {};
+    if (mes && anio) {
+      params.mes = mes;
+      params.anio = anio;
+    }
+    const res = await axios.get(`${API_URL}/mantenimiento/top-tecnicos`, { params });
+    return res.data;
   }
 };
 

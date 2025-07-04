@@ -194,4 +194,32 @@ def obtener_solicitudes_por_tecnico(id_tecnico):
     solicitudes = cursor.fetchall()
     cursor.close()
     conn.close()
-    return jsonify(solicitudes) 
+    return jsonify(solicitudes)
+
+# Obtener el ranking de técnicos con más mantenimientos realizados
+@mantenimiento_bp.route('/top-tecnicos', methods=['GET'])
+def top_tecnicos():
+    mes = request.args.get('mes')
+    anio = request.args.get('anio')
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    filtro_fecha = ''
+    params = []
+    if mes and anio:
+        filtro_fecha = 'AND MONTH(sm.fecha_resolucion) = %s AND YEAR(sm.fecha_resolucion) = %s'
+        params.extend([int(mes), int(anio)])
+    cursor.execute(f'''
+        SELECT 
+            t.id_tecnico,
+            t.nombre_tecnico,
+            COUNT(sm.id_solicitud) as mantenimientos_realizados
+        FROM SolicitudesMantenimiento sm
+        JOIN Tecnicos t ON sm.id_tecnico_asignado = t.id_tecnico
+        WHERE sm.fecha_resolucion IS NOT NULL {filtro_fecha}
+        GROUP BY t.id_tecnico, t.nombre_tecnico
+        ORDER BY mantenimientos_realizados DESC
+    ''', params)
+    ranking = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(ranking) 

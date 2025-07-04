@@ -387,4 +387,47 @@ def obtener_costos_insumos():
     return jsonify({
         'costos_insumos': costos,
         'costos_totales': totales
-    }) 
+    })
+
+@venta_bp.route('/insumo-mayor-costo', methods=['GET'])
+def insumo_mayor_costo():
+    fecha_inicio = request.args.get('fecha_inicio')
+    fecha_fin = request.args.get('fecha_fin')
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    if fecha_inicio and fecha_fin:
+        cursor.execute('''
+            SELECT 
+                i.id_insumo,
+                i.nombre_insumo,
+                i.unidad_medida,
+                SUM(ci.cantidad_consumida) as total_consumido,
+                SUM(ci.cantidad_consumida * i.costo_unitario) as costo_total
+            FROM ConsumoInsumos ci
+            JOIN Insumos i ON ci.id_insumo = i.id_insumo
+            WHERE ci.fecha_consumo BETWEEN %s AND %s
+            GROUP BY i.id_insumo, i.nombre_insumo, i.unidad_medida
+            ORDER BY costo_total DESC
+            LIMIT 1
+        ''', (fecha_inicio, fecha_fin))
+    else:
+        cursor.execute('''
+            SELECT 
+                i.id_insumo,
+                i.nombre_insumo,
+                i.unidad_medida,
+                SUM(ci.cantidad_consumida) as total_consumido,
+                SUM(ci.cantidad_consumida * i.costo_unitario) as costo_total
+            FROM ConsumoInsumos ci
+            JOIN Insumos i ON ci.id_insumo = i.id_insumo
+            GROUP BY i.id_insumo, i.nombre_insumo, i.unidad_medida
+            ORDER BY costo_total DESC
+            LIMIT 1
+        ''')
+    insumo = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    if insumo:
+        return jsonify(insumo)
+    else:
+        return jsonify({'error': 'No hay datos de consumo de insumos'}), 404 
