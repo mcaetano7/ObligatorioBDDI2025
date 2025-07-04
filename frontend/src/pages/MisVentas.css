@@ -1,0 +1,357 @@
+.mis-ventas-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.mis-ventas-header {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.back-btn {
+  padding: 8px 16px;
+  font-size: 0.9rem;
+}
+
+.mis-ventas-header h1 {
+  color: #333;
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.loading {
+  text-align: center;
+  padding: 50px;
+  font-size: 1.2rem;
+  color: #666;
+}
+
+.error-message {
+  background: #fee;
+  color: #c53030;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #c53030;
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+}
+
+/* Resumen de ganancias */
+.resumen-ganancias {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.ganancia-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 25px;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  transition: transform 0.3s ease;
+}
+
+.ganancia-card:hover {
+  transform: translateY(-5px);
+}
+
+.ganancia-card h3 {
+  margin: 0 0 15px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.ganancia-monto {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+/* Filtros */
+.filtros-section {
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  margin-bottom: 30px;
+}
+
+.filtros-section h2 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.filtros-form {
+  display: flex;
+  gap: 20px;
+  align-items: end;
+  flex-wrap: wrap;
+}
+
+.filtros-form .form-group {
+  flex: 1;
+  min-width: 200px;
+}
+
+.filtros-form label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.filtros-form input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: #f8f9fa;
+}
+
+.filtros-form input:focus {
+  outline: none;
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.filtros-form .btn {
+  padding: 12px 24px;
+  white-space: nowrap;
+}
+
+/* Ganancias por máquina */
+.ganancias-maquinas {
+  margin-bottom: 40px;
+}
+
+.ganancias-maquinas h2 {
+  margin: 0 0 25px 0;
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.ganancias-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.no-ganancias {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+  background: #f8f9fa;
+  border-radius: 15px;
+  border: 2px dashed #dee2e6;
+}
+
+.no-ganancias p {
+  font-size: 1.1rem;
+  color: #666;
+  margin: 0;
+}
+
+.ganancia-maquina-card {
+  background: white;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.ganancia-maquina-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.ganancia-maquina-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.ganancia-maquina-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.periodo-badge {
+  background: #667eea;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.ganancia-maquina-details p {
+  margin: 8px 0;
+  color: #555;
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.ganancia-maquina-details strong {
+  color: #333;
+  font-weight: 600;
+}
+
+/* Sección de ventas */
+.ventas-section {
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+.ventas-section h2 {
+  margin: 0 0 25px 0;
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.no-ventas {
+  text-align: center;
+  padding: 40px;
+  background: #f8f9fa;
+  border-radius: 15px;
+  border: 2px dashed #dee2e6;
+}
+
+.no-ventas p {
+  font-size: 1.1rem;
+  color: #666;
+  margin: 0;
+}
+
+.ventas-table-container {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid #e9ecef;
+}
+
+.ventas-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.ventas-table th {
+  background: #f8f9fa;
+  padding: 15px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 2px solid #e9ecef;
+  font-size: 0.95rem;
+}
+
+.ventas-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e9ecef;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.ventas-table tr:hover {
+  background: #f8f9fa;
+}
+
+.ventas-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Botones */
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .mis-ventas-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .resumen-ganancias {
+    grid-template-columns: 1fr;
+  }
+  
+  .ganancia-monto {
+    font-size: 1.5rem;
+  }
+  
+  .filtros-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filtros-form .form-group {
+    min-width: auto;
+  }
+  
+  .ganancias-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .ganancia-maquina-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .ventas-table-container {
+    font-size: 0.8rem;
+  }
+  
+  .ventas-table th,
+  .ventas-table td {
+    padding: 8px 6px;
+  }
+} 

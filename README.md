@@ -1,44 +1,166 @@
-# ObligatorioBDDI2025
+# ObligatorioBDDI2025 - Cafés Marloy
 
-===========================================
+Sistema de gestión para el alquiler de máquinas de café con funcionalidades completas de autenticación, gestión de clientes, máquinas, ventas y mantenimientos.
 
-crear el entorno virtual (venv):
-python -m venv venv
+## Características Implementadas
 
-EJECUTAR BACKEND:
-1) ir a la carpeta backend:
+### Backend (Flask + MySQL)
+- API REST completa con endpoints para todas las entidades
+- Autenticación y autorización de usuarios
+- Gestión de clientes, máquinas, cafés, insumos, proveedores, técnicos, ventas y mantenimientos
+- Base de datos MySQL con relaciones complejas
 
-cd backend
+### Frontend (React + Vite)
+- **Sistema de Autenticación**: Login y registro de usuarios
+- **Dashboard Responsivo**: Interfaz adaptada para diferentes roles
+- **Diseño Moderno**: UI/UX atractiva y funcional
+- **Protección de Rutas**: Solo usuarios autenticados pueden acceder
 
-2) activar el entorno virtual (venv): 
+## Instalación y Configuración
 
-Git bash: source venv/Scripts/activate
-PowerShell: .\venv\Scripts\Activate.ps1
-CMD: ..\venv\Scripts\activate
+### Prerrequisitos
+- Python 3.8+
+- Node.js 18+
+- MySQL 8.0+
+- Git
 
-3) instalar dependencias del proyecto:
+### Base de Datos
+1. Ejecutar el script de creación de la base de datos:
+   ```sql
+   source backend/script.sql
+   ```
 
-pip install -r requirements.txt  (con el entorno venv activado) en backend
+2. Insertar datos de prueba:
+   ```sql
+   source backend/inserts.sql
+   ```
 
-ejecutar flask:
+3. (Opcional) Insertar usuarios de prueba:
+   ```sql
+   source backend/usuarios_prueba.sql
+   ```
 
-python app.py (con el entorno venv activado)
+### Backend
 
+1. **Crear entorno virtual**:
+   ```bash
+   python -m venv venv
+   ```
 
-===========================================
+2. **Activar entorno virtual**:
+   - Git bash: `source venv/Scripts/activate`
+   - PowerShell: `.\venv\Scripts\Activate.ps1`
+   - CMD: `..\venv\Scripts\activate`
 
-ejecutar frontend: (en una terminal aparte)
+3. **Instalar dependencias**:
+   ```bash
+   cd backend
+   pip install -r requirements.txt
+   ```
 
-1) in a la carpeta frontend
+4. **Ejecutar Flask**:
+   ```bash
+   python app.py
+   ```
 
-cd frontend
+El backend estará disponible en `http://localhost:5000`
 
-2) instalar react:
+### Frontend
 
-npm install
+1. **Instalar dependencias**:
+   ```bash
+   cd frontend
+   npm install
+   ```
 
-seleccionar React y JavaScript ?? como se hace esto
+2. **Ejecutar en modo desarrollo**:
+   ```bash
+   npm run dev
+   ```
 
-2) ejecutar el proyecto
+El frontend estará disponible en `http://localhost:5173`
 
-npm run dev
+### Scripts de Inicio Rápidos
+
+- **Backend**: `start.bat` (ya existente)
+- **Frontend**: `start_frontend.bat` (nuevo)
+
+## Usuarios de Prueba
+
+Si ejecutaste `usuarios_prueba.sql`, puedes usar:
+
+### Cliente
+- **Email**: `cliente@test.com`
+- **Contraseña**: `password123`
+
+### Administrador
+- **Email**: `admin@test.com`
+- **Contraseña**: `password123`
+
+## Funcionalidades del Frontend
+
+### Autenticación
+- ✅ Login con validación de credenciales
+- ✅ Registro de nuevos usuarios (Cliente/Administrador)
+- ✅ Mensajes de error específicos
+- ✅ Protección de rutas
+
+### Dashboard
+- ✅ Información del usuario logueado
+- ✅ Funcionalidades diferenciadas por rol
+- ✅ Diseño responsivo y moderno
+- ✅ Navegación intuitiva
+
+### Próximas Funcionalidades
+- Gestión completa de clientes
+- Gestión de máquinas y alquileres
+- Gestión de ventas y reportes
+- Gestión de mantenimientos
+- Gestión de insumos y proveedores
+
+## Estructura del Proyecto
+
+```
+ObligatorioBDDI2025/
+├── backend/                 # API Flask
+│   ├── routes/             # Endpoints de la API
+│   │   ├── pages/          # Páginas principales
+│   │   ├── components/     # Componentes reutilizables
+│   │   ├── services/       # Servicios de API
+│   │   └── context/        # Contextos de React
+│   └── package.json
+├── start.bat              # Script inicio backend
+├── start_frontend.bat     # Script inicio frontend
+└── README.md
+```
+
+## Tecnologías Utilizadas
+
+### Backend
+- **Flask**: Framework web
+- **MySQL**: Base de datos
+- **Flask-CORS**: Manejo de CORS
+- **bcrypt**: Hash de contraseñas
+
+### Frontend
+- **React 19**: Framework de JavaScript
+- **Vite**: Herramienta de construcción
+- **React Router**: Enrutamiento
+- **Axios**: Cliente HTTP
+- **CSS3**: Estilos modernos
+
+## Notas Importantes
+
+- A efectos de esta implementación se da por echo que todas las máquinas venden todos los cafés posibles en base a los insumos comprados.
+- De esa forma podemos calcular las ganancias generadas por las máquinas.
+- El sistema está diseñado para ser escalable y mantenible.
+- La interfaz es completamente responsiva y accesible.
+
+## Contribución
+
+Para contribuir al proyecto:
+1. Fork el repositorio
+2. Crea una rama para tu feature
+3. Commit tus cambios
+4. Push a la rama
+5. Abre un Pull Request
