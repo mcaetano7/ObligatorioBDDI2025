@@ -65,8 +65,8 @@ const Dashboard = () => {
                   <p>Ver historial de ventas</p>
                 </div>
                 <div className="feature-item" onClick={() => navigate('/solicitar-mantenimiento')}>
-                  <h3>Solicitar Mantenimiento</h3>
-                  <p>Crear solicitudes de mantenimiento</p>
+                  <h3>Mantenimiento</h3>
+                  <p>ver solicitudes de mantenimiento</p>
                 </div>
               </>
             ) : (

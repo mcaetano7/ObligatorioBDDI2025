@@ -40,7 +40,7 @@ Sistema de gestión para el alquiler de máquinas de café con funcionalidades c
    source backend/usuarios_prueba.sql
    ```
 
-### Backend
+### en backend
 
 1. **Crear entorno virtual**:
    ```bash
@@ -50,11 +50,10 @@ Sistema de gestión para el alquiler de máquinas de café con funcionalidades c
 2. **Activar entorno virtual**:
    - Git bash: `source venv/Scripts/activate`
    - PowerShell: `.\venv\Scripts\Activate.ps1`
-   - CMD: `..\venv\Scripts\activate`
+   - CMD: `.\venv\Scripts\activate`
 
 3. **Instalar dependencias**:
    ```bash
-   cd backend
    pip install -r requirements.txt
    ```
 
@@ -148,19 +147,3 @@ ObligatorioBDDI2025/
 - **React Router**: Enrutamiento
 - **Axios**: Cliente HTTP
 - **CSS3**: Estilos modernos
-
-## Notas Importantes
-
-- A efectos de esta implementación se da por echo que todas las máquinas venden todos los cafés posibles en base a los insumos comprados.
-- De esa forma podemos calcular las ganancias generadas por las máquinas.
-- El sistema está diseñado para ser escalable y mantenible.
-- La interfaz es completamente responsiva y accesible.
-
-## Contribución
-
-Para contribuir al proyecto:
-1. Fork el repositorio
-2. Crea una rama para tu feature
-3. Commit tus cambios
-4. Push a la rama
-5. Abre un Pull Request
