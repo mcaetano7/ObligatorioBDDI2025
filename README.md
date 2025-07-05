@@ -99,7 +99,7 @@ Si ejecutaste `usuarios_prueba.sql`, puedes usar:
 ## Funcionalidades del Frontend
 
 ### Autenticación
-- ✅ Login con validación de credenciales
+- ✅Login con validación de credenciales
 - ✅ Registro de nuevos usuarios (Cliente/Administrador)
 - ✅ Mensajes de error específicos
 - ✅ Protección de rutas
@@ -109,13 +109,6 @@ Si ejecutaste `usuarios_prueba.sql`, puedes usar:
 - ✅ Funcionalidades diferenciadas por rol
 - ✅ Diseño responsivo y moderno
 - ✅ Navegación intuitiva
-
-### Próximas Funcionalidades
-- Gestión completa de clientes
-- Gestión de máquinas y alquileres
-- Gestión de ventas y reportes
-- Gestión de mantenimientos
-- Gestión de insumos y proveedores
 
 ## Estructura del Proyecto
 
