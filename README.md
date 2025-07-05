@@ -81,8 +81,8 @@ El frontend estará disponible en `http://localhost:5173`
 
 ### Scripts de Inicio Rápidos
 
-- **Backend**: `start.bat` (ya existente)
-- **Frontend**: `start_frontend.bat` (nuevo)
+- **Backend**: `start.bat` 
+- **Frontend**: `start_frontend.bat` 
 
 ## Usuarios de Prueba
 
